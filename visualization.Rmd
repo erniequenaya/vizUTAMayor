@@ -1,0 +1,326 @@
+---
+title: "Exploración de datos climáticos locales - Iquique"
+author: "Ernie Quenaya"
+date: "6/13/2021"
+output:
+  html_document: default
+  word_document: default
+fig_width: 8 
+fig_height: 4 
+subtitle: Análisis exploratorio UTA Mayor
+---
+```{r RMySQL, echo=FALSE}
+library(RMySQL)
+library(lubridate)
+library(hms)
+library(ggplot2)
+library(dplyr)
+```
+
+## Recopilación de datos iniciales
+
+La meteorología es una ciencia que estudia los comportamientos de la atmósfera con un enfoque principal en la predicción del clima.
+Todas las condiciones climáticas conocidas son producto del calentamiento desigual de la tierra por medio de la magnitud radiación solar en la Tierra en conjunto con las rotaciones del planeta, sea sobre su eje o su órbita. La incidencia de la radiación solar genera cambios en dos variables que son primordiales para la realización de cualquier estudio meteorológico, la temperatura y la presión.
+
+La radiación calienta las masas de aire elevando su temperatura,  haciéndolas menos densas y disminuyendo su presión, este fenómeno genera espacios en la atmósfera de alta y baja presión y, en un natural esfuerzo por corregir esta desigualdad, las masas de aire inician sus movimientos desde zonas de alta presión a las de baja presión. Desde este punto, ya se empiezan a generar fenómenos perceptibles fácilmente por el ojo humano, como la formación de nubes que, dependiendo del grado de humedad en el aire y la brusquedad de la incidencia de los frentes de alta presión en otras zona geográficas, desencadenan riesgos reales sobre la zona afectada, mediante precipitaciones leves a tormentosas.
+
+De esta forma, el montado de los sensores de este proyecto hacen registro de estas variables esenciales para cualquier esfuerzo de pronóstico meteorológico. Estas tres variables son:
+
+- Presión atmosférica
+- Temperatura
+- Humedad relativa
+
+## Exploracion de datos locales
+Entendiéndose por "locales" a aquellos datos generados por los sensores montados cumpliendo el objetivo específico 1 del proyecto, ha de hacerse consulta al servidor de la carrera puesto a que en éste se encuentran centralizados los registros de los sensores
+De este forma habrimos conexión a la base de datos, solicitamos los registros y los guardamos en un dataframe
+
+```{r echo=FALSE}
+mydb = dbConnect(MySQL(), user='admin_mysql', password=.rs.askForPassword("Contraseña DB:"), dbname='weather', host='192.168.50.176')
+weather = dbSendQuery(mydb, "select * from WEATHER_MEASUREMENT")
+# df <- read.csv("weather.csv",header = TRUE, sep = ",")
+df = fetch(weather, n=-1)
+```
+Las advertencias explican que el tipo de datos de ciertas columnas fueron alteradas para poder ser utilizadas como dataframe, de la siguiente forma
+
+- Temperatura (AMBIET_TEMPERATURE): de *decimal(6,2)* a numérico decimal
+- Presión QFE (AIR_PRESSURE): de *decimal(6,2)* a numérico decimal
+- Humedad relativa (HUMIDITY): de *decimal(6,2)* a numérico decimal
+- Momento de registro (CREATED): de *timestamp* a caracter
+
+### Transformación de fechas
+Considerando, como en todo fenómeno físico, el tiempo como variable independiente del dataset, es que es de suma importancia asegurar el tipo de dato del momento de registro (CREATED) con tal de asegurar su consistencia para manipulación matemática
+Lo anteriormente dicho se refuerza en el hecho de que las variables climáticas son dependientes de la intensidad de la radiación solar, la cual se hace presente de forma cíclica a través del tiempo
+
+```{r lubridate, echo=FALSE}
+df2<-df
+df2$dateUTC<-ymd_hms(df$serverDate)
+```
+
+Considerando que la exposición de la tierra al sol varía en ciclos de 24 horas y 12 meses es que se hace separación de los registros de hora y fecha
+
+```{r hms, echo=FALSE}
+df2$onlyTime<-as_hms(df2$dateUTC)
+df2$onlyDate<-date(df2$dateUTC)
+```
+
+### Resumen de datos
+Se asegura la correcta importación de datos mediante chequeo de las primeras filas del dataset y la integridad de los tipos de datos mediante cálculo de estadísticas comunes
+
+```{r  echo=FALSE}
+head(df2)
+summary(df2)
+```
+
+
+### Visualización de datos
+#### Temperatura
+Para iniciar, consideramos que nos interesa estudiar la evolución de las variables climáticas a través del tiempo, por ende, es que para todo tipo de gráfico a realizar, las variables temperatura, presión y humedad tendrán un eje dedicado y dependiente del momento en que fueron registradas.
+Bajo esta premisa de estudio, es que son útiles las gráficas de línea y de puntos
+De esta forma iniciamos la visualización de datos graficando todos los registros de temperatura
+
+```{r echo=FALSE}
+#ggplot(df2,aes(x=dateUTC,y=AMBIENT_TEMPERATURE)) + geom_point() + 
+#  ggtitle("Evolución de temperatura") + 
+#  xlab("Momento") + 
+#  ylab("Temperatura")
+
+ggplot(df2,aes(x=dateUTC,y=AMBIENT_TEMPERATURE)) + geom_line() + 
+  ggtitle("Evolución de temperatura") + 
+  xlab("Momento") + 
+  ylab("Temperatura")
+
+ggplot(df2,aes(x=dateUTC,y=AMBIENT_TEMPERATURE,color=as.factor(onlyTime))) + geom_point() + 
+  ggtitle("Distribución de temperatura, color=momento de registro") + 
+  xlab("Hora") + 
+  ylab("Temperatura")
+
+```
+
+Como se puede observar, los datos se encuentran dispersos y corresponden a registros diarios inconexos aunque con una ligera tendencia a la baja, por ende, es de mayor utilidad visualizarlos en un marco de 24 horas.
+
+```{r echo=FALSE}
+#ggplot(df2,aes(x=onlyTime,y=AMBIENT_TEMPERATURE,color=as.factor(onlyDate))) + geom_point() + 
+#  ggtitle("Distribución de temperatura cada 24 horas") + 
+#  xlab("Hora") + 
+#  ylab("Temperatura")
+
+ggplot(df2,aes(x=onlyTime,y=AMBIENT_TEMPERATURE, color=as.factor(onlyDate))) + geom_line() + 
+  ggtitle("Distribución de temperatura cada 24 horas") + 
+  xlab("Hora") + 
+  ylab("Temperatura")
+
+```
+
+Hacemos zoom a las horas en que se ubica  la mayor cantidad de datos.
+
+```{r dplyr, echo=FALSE}
+df3<-df2
+df3<-df3 %>% 
+  filter(onlyTime > as_hms("14:00:00"))
+
+ggplot(df3,aes(x=onlyTime,y=AMBIENT_TEMPERATURE,color=as.factor(onlyDate))) + geom_line() + 
+  ggtitle("Distribución de temperatura pasadas las 14:00 horas") + 
+  xlab("Hora") + 
+  ylab("Temperatura")
+```
+
+#### Humedad relativa
+De esta forma, exploramos mediante los mismos pasos la evolución de la humedad relativa y la presión atmosférica
+
+1. Evolución de la variable a través del año
+2. Evolución de la variable a través de las horas
+
+```{r echo=FALSE}
+ggplot(df2,aes(x=dateUTC,y=HUMIDITY)) + geom_line() + 
+  ggtitle("Evolución de humedad relativa") + 
+  xlab("Momento") + 
+  ylab("Humedad relativa")
+
+#ggplot(df2,aes(x=onlyTime,y=HUMIDITY, color=as.factor(onlyDate))) + geom_line() + 
+#  ggtitle("Evolución de humedad relativa cada 24 horas") + 
+#  xlab("Hora") + 
+#  ylab("Humedad relativa")
+
+ggplot(df3,aes(x=onlyTime,y=HUMIDITY,color=as.factor(onlyDate))) + geom_line() + 
+  ggtitle("Evolución de humedad relativa pasadas las 14:00") + 
+  xlab("Hora") + 
+  ylab("Humedad relativa")
+```
+
+Se puede observar que la humedad relativa tiende a aumentar en las épocas más frías del año a la vez que también aumenta en las horas nocturnas, sin embargo, no se puede confirmar su comportamiento periódico (ciclo cada un día) sin un registro continuo de 24 horas.
+
+#### Presión atmosférica
+Teóricamente, a diferencia de la temperatura y la humedad relativa, la presión atmósferica se llega a dos máximos locales en un rango de 24 horas, primero y naturalmente en las horas de mayor exposición solar pues el calor disminuye la presión de las masas de aire sobre el agua, pero otra vez en las horas nocturnas, pues la drástica pérdida de calor de las masas de agua, disminuye la presión de las masas de aire también.
+Bajo este concepto, se procede a visualizar la evolución de la presión atmosférica al igual que en pasos anteriores
+
+```{r echo=FALSE}
+ggplot(df2,aes(x=dateUTC,y=AIR_PRESSURE)) + geom_line() + 
+  ggtitle("Evolución de presión atmosférica") + 
+  xlab("Momento") + 
+  ylab("Presión")
+
+#ggplot(df2,aes(x=onlyTime,y=AIR_PRESSURE, color=as.factor(onlyDate))) + geom_line() + 
+#  ggtitle("Distribución de presión atmosférica cada 24 horas") + 
+#  xlab("Hora") + 
+#  ylab("Presión")
+
+ggplot(df3,aes(x=onlyTime,y=AIR_PRESSURE,color=as.factor(onlyDate))) + geom_line() + 
+  ggtitle("Evolución de presión atmosférica pasadas las 14:00") + 
+  xlab("Hora") + 
+  ylab("Presión")
+```
+
+Se puede observar que la presión tiene tendencia a aumentar en las épocas más frías del año pero esta tendencia es menos clara que las presentes en temperatura y humedad relativa.
+Si es mas evidente su tendencia a aumentar pasadas las 14 horas del día pero de igual forma, no se puede asegurar su comportamiento periódico sin un registro continuo de 24 horas.
+
+#### Interrelación de los datos
+Analizado los cambios naturales de las variables en el tiempo es que ahora se procede a visualizar la relación **entre** las distribuciones de las variables. Considerando el pequeño tamaño del dataset es que se grafican las observaciones de forma cruda mediante puntos, utilizando una gradiente de colores para visuzalizar una tercera variable
+
+```{r echo=FALSE}
+ggplot(df2,aes(x=AMBIENT_TEMPERATURE,y=HUMIDITY,color=AIR_PRESSURE)) + geom_point()
+ggplot(df2,aes(x=AIR_PRESSURE,y=AMBIENT_TEMPERATURE,color=HUMIDITY)) + geom_point()
+```
+
+En las gráficas se puede observar la formación de clústeres de datos, como en este caso el momento de creación de los registros no es de importancia, los registros actuales del set de datos son suficientes para afirmar la existencia de una correlación entre las variables climáticas las cuales, podrían ser las siguientes:
+
+1. A mayor temperatura, menor humedad relativa del aire
+2. La presión atmosférica tiene un comportamiento en mayor parte independiente de las otras variables
+
+```{r echo=FALSE}
+# ggplot(df2,aes(x=AMBIENT_TEMPERATURE,y=HUMIDITY)) + geom_density2d_filled()
+# ggplot(df2,aes(x=AMBIENT_TEMPERATURE,y=AIR_PRESSURE)) + geom_density2d_filled()
+# ggplot(df2,aes(x=HUMIDITY,y=AIR_PRESSURE)) + geom_density2d_filled()
+```
+
+## Exploracion de datos externos (Dirección General de Aeronáutica Civil)
+
+Con el fin de entender las diferencias de los datos locales con aquellos oficiales para la ciudad de Iquique es que se debe hacer uso de datos proveídos por la Dirección General de Aeronáutica Civil (DGAC). De forma preliminar, luego de inspeccionar los datos en su forma de texto se puede afirmar que son de calidad, pues a pesar de ofrecer cada variable climática mediante un distinto archivo .csv, todos estos archivos poseen la misma cantidad de registros tomados en momentos coincidente (tramos de cada 1 hora), lo cual facilita su mezcla y visualización
+> Del mismo modo que para datos locales, los datos de tipo fecha han de ser transformado de *caracter* a *date* para poder operar matemáticamente sobre ellos
+
+### Exploracion de datos externos por variable
+
+Los gráficos de las observaciones se presentan para cada variable del siguiente modo:
+
+1. Evolución de la variable durante el año
+2. Evolución de la variable a través del día
+3. Distribución de la variable a traves del día, separando por meses del año, con tal de detectas una tendencia
+
+```{r}
+temp <- read.csv("../data/2021/200006_2021_Temperatura_.csv",header = TRUE, sep = ";")
+hum <- read.csv("../data/2021/200006_2021_Humedad_.csv",header = TRUE, sep = ";")
+qfe <- read.csv("../data/2021/200006_2021_PresionQFE_.csv",header = TRUE, sep = ";")
+dgac=merge(temp,hum,by="momento")
+dgac=merge(dgac,qfe,by="momento")
+dgac$utc<-dmy_hms(dgac$momento)
+dgac$onlyTime<-as_hms(dgac$utc)
+dgac$onlyDate<-date(dgac$utc)
+rm(hum)
+rm(qfe)
+rm(temp)
+```
+
+#### Temperatura con respecto al tiempo
+
+```{r fig.height = 4, fig.width = 8, echo=FALSE}
+ggplot(dgac,aes(x=utc,y=Ts_Valor)) + geom_line() + 
+  ggtitle("Evolución de temperatura en el año") + 
+  xlab("Mes") + 
+  ylab("Temperatura")
+ggplot(dgac,aes(x=onlyTime,y=Ts_Valor,color=onlyDate)) + geom_jitter() + 
+  ggtitle("Distribución de temperatura en el día") + 
+  xlab("Hora") + 
+  ylab("Temperatura")
+ggplot(dgac,aes(x=hour(onlyTime),y=Ts_Valor, alpha=0.5)) + geom_jitter() + 
+  facet_wrap(month(dgac$utc)) +
+  ggtitle("Distribución de temperatura a través de las horas, separada por meses") +
+  xlab("Hora") + 
+  ylab("Temperatura")
+```
+
+En estas gráficas, debido a la mayor cantidad de registros se puede observar de forma clara los comportamientos que rigen las variaciones de temperatura:
+
+1. La temperatura, desde enero, ha tendido a bajar continuamente luego de alcanzar su peak en la mitad de febrero 
+2. Tiene un comportamiento cíclico cada 24 horas pronunciado, alcanzando su peak a las 18:00 horas y su mínimo global entre las 10 y 12 horas
+3. Este comportamiento cíclico es independiente del momento del año
+4. El avance del año disminuye el promedio de temperatura de los registros, más no (o en menor grado) su varianza
+
+#### Humedad relativa con respecto al tiempo
+
+```{r fig.height = 4, fig.width = 8, echo=FALSE}
+### only Humidity ###
+ggplot(dgac,aes(x=utc,y=HR_Valor)) + geom_line() + 
+  ggtitle("Evolución de humedad relativa en el año") + 
+  xlab("Mes") + 
+  ylab("Humedad")
+ggplot(dgac,aes(x=onlyTime,y=HR_Valor,color=onlyDate)) + geom_jitter() + 
+  ggtitle("Distribución de humedad relativa en el día") + 
+  xlab("Hora") + 
+  ylab("Humedad")
+ggplot(dgac,aes(x=hour(onlyTime),y=HR_Valor, alpha=0.5)) + geom_jitter() + 
+  facet_wrap(month(dgac$utc)) +
+  ggtitle("Distribución de humedad relativa a través de las horas, separada por meses") +
+  xlab("Hora") + 
+  ylab("Humedad")
+```
+
+En estas gráficas, debido a la mayor cantidad de registros se puede observar de forma clara los comportamientos que rigen las variaciones en la humedad relativa del aire:
+
+1. La humedad, desde enero, ha tendido a incrementar, de forma inversamente proporcional a la tempertarua pero con tendencia menos pronunciada, luego de alcanzar su punto más bajo en la mitad de febrero 
+2. Tiene un comportamiento cíclico cada 24 horas pronunciado pero menos rígido, alcanzando su mínimo global a las 18:00 horas y su peak entre las 10 y 12 horas
+3. Este comportamiento cíclico es independiente del momento del año
+4. El avance del año aumenta el promedio de temperatura de los registros, más no (o en menor grado) su varianza
+
+#### Presión atmosférica con respecto al tiempo
+
+```{r fig.height = 4, fig.width = 8, echo=FALSE}
+### pressure ###
+ggplot(dgac,aes(x=utc,y=QFE_Valor)) + geom_line() + 
+  ggtitle("Evolución de presión atmosférica en el año") + 
+  xlab("Mes") + 
+  ylab("Presión")
+ggplot(dgac,aes(x=onlyTime,y=QFE_Valor,color=onlyDate)) + geom_jitter() +
+  ggtitle("Distribución de presión atmosférica en el día") + 
+  xlab("Hora") + 
+  ylab("Presión")
+ggplot(dgac,aes(x=hour(onlyTime),y=QFE_Valor, alpha=0.5)) + geom_jitter() + 
+  facet_wrap(month(dgac$utc)) +
+  ggtitle("Distribución de presión atmosférica a través de las horas, separada por meses") +
+  xlab("Hora") + 
+  ylab("Presión")
+```
+
+En estas gráficas, debido a la mayor cantidad de registros se puede observar de forma clara los comportamientos que rigen las variaciones en la presión atmosférica:
+
+1. La presión, desde enero, ha tendido a aumentar continuamente luego de alcanzar su mínimo global en inicios marzo 
+2. Tiene un comportamiento cíclico cada 24 horas pronunciado, alcanzando máximos locales a las 3 y 14 horas, además mínimos locales en las 9 y 21 horas
+3. Este comportamiento cíclico es independiente del momento del año
+4. El avance del año aumenta el promedio de presión de los registros 
+5. Al igual que su varianza
+
+### Exploracion de datos externos, relación entre variables
+
+```{r, echo=FALSE}
+ggplot(dgac,aes(x=Ts_Valor,y=HR_Valor, color=QFE_Valor)) + geom_point() + 
+  ggtitle("Distribución de humedad relativa y presión atmosférica respecto a la temperatura") + 
+  xlab("Temperatura") + 
+  ylab("Humedad")
+#ggplot(dgac,aes(x=onlyTime,y=Ts_Valor,color=HR_Valor,fill=QFE_Valor)) + geom_point() + 
+#  ggtitle("Distribución de qfeedad") + 
+#  xlab("Hora") + 
+#  ylab("Presión")
+ggplot(dgac,aes(x=QFE_Valor,y=Ts_Valor,color=HR_Valor)) + geom_point() + 
+  ggtitle("Distribución de temperatura y humedad relativa respecto a la presión atmosférica") + 
+  xlab("Presion") + 
+  ylab("Temperatura")
+
+### totally expose the grouping relationship between the 3 variables
+ggplot(dgac,aes(x=QFE_Valor,y=Ts_Valor,color=HR_Valor)) + geom_point() + 
+  facet_wrap(month(dgac$utc)) +
+  ggtitle("Distribución de temperatura y humedad relativa respecto a la presión atmosférica, evolución por meses") + 
+  xlab("Presión") + 
+  ylab("Temperatura")
+```
+
+1. Generalizando, La humedad junto a la presión, guardan una relación inversamente proporcional con la temperatura
+2. La magnitud de esta relación es menos fuerte entre presión-temperatura
+3. Estas relaciones se mantienen durante el avance del año, pero cambia su promedio
