@@ -23,7 +23,7 @@ df2<-df
 df2$dateUTC<-ymd_hms(df$serverDate)
 
 # en caso de haber cargado dataset mediante csv adjunto
-df2$dateUTC<-ymd_hms(df$CREATED)
+# df2$dateUTC<-ymd_hms(df$CREATED)
 
 # considerando que las variables climaticas presentan comporamientos ciclicos
 # en periodos de 24 horas (dia-noche) y de 365 dias (por estaciones del año)
@@ -35,6 +35,12 @@ df2$onlyDate<-date(df2$dateUTC)
 head(df2)
 summary(df2)
 
+# mantener solo aquellos registros creados desde que la variable 'serverDate' fue implementada
+# de lo contrario omitir esta linea
+df2<-df2[!(df2$dateUTC<=ymd_hms("2021-06-25 16:45:25")),]
+# df2<-df2[!(df2$CREATED<=ymd_hms("2021-06-24 16:45:25")),]
+head(df2)
+
 ### Visualización de datos
 ## temperatura
 # Evolucion temperatura a traves de lo que va del año
@@ -43,7 +49,7 @@ ggplot(df2,aes(x=dateUTC,y=AMBIENT_TEMPERATURE)) + geom_line() +
   xlab("Momento") + 
   ylab("Temperatura")
 # Evolucion temperatura cada 24 horas
-ggplot(df2,aes(x=dateUTC,y=AMBIENT_TEMPERATURE,color=as.factor(onlyTime))) + geom_point() + 
+ggplot(df2,aes(x=dateUTC,y=AMBIENT_TEMPERATURE,color=onlyTime)) + geom_point() + 
   ggtitle("Distribución de temperatura, color=momento de registro") + 
   xlab("Hora") + 
   ylab("Temperatura")
@@ -71,14 +77,14 @@ ggplot(df2,aes(x=dateUTC,y=HUMIDITY)) + geom_line() +
   ylab("Humedad relativa")
 # Evolucion humedad relativa cada 24 horas. clasificadas por día
 ggplot(df2,aes(x=onlyTime,y=HUMIDITY,color=as.factor(onlyDate))) + geom_line() + 
-  ggtitle("Evolución de humedad relativa") + 
+  ggtitle("Evolución de humedad relativa cada 24 horas") + 
   xlab("Hora") + 
   ylab("Humedad relativa")
 
 ## Presión atmosférica
 # Evolucion de la presión atmosférica a traves de lo que va del año
 ggplot(df2,aes(x=dateUTC,y=AIR_PRESSURE)) + geom_line() + 
-  ggtitle("Evolución de presión atmosférica") + 
+  ggtitle("Evolución de presión atmosférica durante el año") + 
   xlab("Momento") + 
   ylab("Presión")
 # Evolucion de la presión atmosférica cada 24 horas, clasificadas por día
