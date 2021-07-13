@@ -64,7 +64,7 @@ ggplot(df2,aes(x=onlyTime,y=AMBIENT_TEMPERATURE, color=as.factor(onlyDate))) + g
 # df3<-df2
 # df3<-df3 %>% 
 #   filter(onlyTime > as_hms("14:00:00"))
-# ggplot(df2,aes(x=onlyTime,y=HUMIDITY,color=as.factor(onlyDate))) + geom_line() + 
+# ggplot(df3,aes(x=onlyTime,y=HUMIDITY,color=as.factor(onlyDate))) + geom_line() + 
 #   ggtitle("Distribución de temperatura pasadas las 14:00 horas") + 
 #   xlab("Hora") + 
 #   ylab("Temperatura")
@@ -97,6 +97,11 @@ ggplot(df2,aes(x=onlyTime,y=AIR_PRESSURE, color=as.factor(onlyDate))) + geom_lin
 # Aunque no se cuente con el tiempo de los registros, se puede estudiar su relacion al graficarlos
 # por ejemplo, si la distribucion de los registros dibujan una fila, o forman grupos
 ggplot(df2,aes(x=AMBIENT_TEMPERATURE,y=HUMIDITY,color=AIR_PRESSURE)) + geom_point()
+rm(onlyHours)
+ggplot(df2,aes(x=AMBIENT_TEMPERATURE,y=HUMIDITY,color=onlyTime)) + geom_point()
+ggplot(df2,aes(x=AMBIENT_TEMPERATURE,y=HUMIDITY,color=dateUTC)) + geom_point()
+
+
 ggplot(df2,aes(x=AIR_PRESSURE,y=AMBIENT_TEMPERATURE,color=HUMIDITY)) + geom_point()
 
 

@@ -136,15 +136,15 @@ ggplot(df2,aes(x=dateUTC,y=HUMIDITY)) + geom_line() +
   xlab("Momento") + 
   ylab("Humedad relativa")
 
-#ggplot(df2,aes(x=onlyTime,y=HUMIDITY, color=as.factor(onlyDate))) + geom_line() + 
-#  ggtitle("Evolución de humedad relativa cada 24 horas") + 
-#  xlab("Hora") + 
-#  ylab("Humedad relativa")
+ggplot(df2,aes(x=onlyTime,y=HUMIDITY, color=as.factor(onlyDate))) + geom_line() +
+ ggtitle("Evolución de humedad relativa cada 24 horas") +
+ xlab("Hora") +
+ ylab("Humedad relativa")
 
-ggplot(df3,aes(x=onlyTime,y=HUMIDITY,color=as.factor(onlyDate))) + geom_line() + 
-  ggtitle("Evolución de humedad relativa pasadas las 14:00") + 
-  xlab("Hora") + 
-  ylab("Humedad relativa")
+# ggplot(df3,aes(x=onlyTime,y=HUMIDITY,color=as.factor(onlyDate))) + geom_line() + 
+#   ggtitle("Evolución de humedad relativa pasadas las 14:00") + 
+#   xlab("Hora") + 
+#   ylab("Humedad relativa")
 ```
 
 Se puede observar que la humedad relativa tiende a aumentar en las épocas más frías del año a la vez que también aumenta en las horas nocturnas, sin embargo, no se puede confirmar su comportamiento periódico (ciclo cada un día) sin un registro continuo de 24 horas.
@@ -159,15 +159,15 @@ ggplot(df2,aes(x=dateUTC,y=AIR_PRESSURE)) + geom_line() +
   xlab("Momento") + 
   ylab("Presión")
 
-#ggplot(df2,aes(x=onlyTime,y=AIR_PRESSURE, color=as.factor(onlyDate))) + geom_line() + 
-#  ggtitle("Distribución de presión atmosférica cada 24 horas") + 
-#  xlab("Hora") + 
-#  ylab("Presión")
+ggplot(df2,aes(x=onlyTime,y=AIR_PRESSURE, color=as.factor(onlyDate))) + geom_line() +
+ ggtitle("Distribución de presión atmosférica cada 24 horas") +
+ xlab("Hora") +
+ ylab("Presión")
 
-ggplot(df3,aes(x=onlyTime,y=AIR_PRESSURE,color=as.factor(onlyDate))) + geom_line() + 
-  ggtitle("Evolución de presión atmosférica pasadas las 14:00") + 
-  xlab("Hora") + 
-  ylab("Presión")
+# ggplot(df3,aes(x=onlyTime,y=AIR_PRESSURE,color=as.factor(onlyDate))) + geom_line() + 
+#   ggtitle("Evolución de presión atmosférica pasadas las 14:00") + 
+#   xlab("Hora") + 
+#   ylab("Presión")
 ```
 
 Se puede observar que la presión tiene tendencia a aumentar en las épocas más frías del año pero esta tendencia es menos clara que las presentes en temperatura y humedad relativa.
