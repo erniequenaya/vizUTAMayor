@@ -9,7 +9,7 @@ fig_width: 8
 fig_height: 4 
 subtitle: Análisis exploratorio UTA Mayor
 ---
-```{r RMySQL, echo=FALSE}
+```{r warning=FALSE,message=FALSE}
 library(RMySQL)
 library(lubridate)
 library(hms)

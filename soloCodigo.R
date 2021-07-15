@@ -2,17 +2,17 @@ library(RMySQL)
 library(lubridate)
 library(hms)
 library(ggplot2)
-library(dplyr)
+# library(dplyr)
 
 # Configurando conexion a DB
 # proveer contraseña mediante cuadro de dialogo
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 mydb = dbConnect(MySQL(), user='admin_mysql', password=.rs.askForPassword("Contraseña DB:"), dbname='weather', host='192.168.50.176')
 weather = dbSendQuery(mydb, "select * from WEATHER_MEASUREMENT")
 df = fetch(weather, n=-1)
 
 # importar como csv
 # en caso de no contar con conexion a DB o de querer repetir los graficos expuestos el 25 de junio
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 df <- read.csv("weather.csv",header = TRUE, sep = ",")
 
 # transformacion de mormento de creacion de filas a un formato operable por R
@@ -113,19 +113,27 @@ ggplot(df2,aes(x=AIR_PRESSURE,y=AMBIENT_TEMPERATURE,color=HUMIDITY)) + geom_poin
 temp <- read.csv("200006_2021_Temperatura_.csv",header = TRUE, sep = ";")
 hum <- read.csv("200006_2021_Humedad_.csv",header = TRUE, sep = ";")
 qfe <- read.csv("200006_2021_PresionQFE_.csv",header = TRUE, sep = ";")
+
+# Transformación de fechas en datasets temporales
+temp$utc<-dmy_hms(temp$momento)
+hum$utc<-dmy_hms(hum$momento)
+qfe$utc<-dmy_hms(qfe$momento)
+
 # Join de los 3 datasets segun momento del registro
-dgac=merge(temp,hum,by="momento")
-dgac=merge(dgac,qfe,by="momento")
-dgac$utc<-dmy_hms(dgac$momento)
-# transformacion de fechas
-dgac$onlyTime<-as_hms(dgac$utc)
-dgac$onlyDate<-date(dgac$utc)
+dgac=merge(temp,hum,by="utc")
+dgac=merge(dgac,qfe,by="utc")
+
 # filtrado de variables resultantes del join
 # Ts_Valor = temperatura
 # HR_Valor = humedad relativa
 # QFE_Valor = presion atmosferica
-toKeep<-c("Ts_Valor","HR_Valor","QFE_Valor","utc","onlyTime","onlyDate")
-dgac2<-dgac[toKeep]
+toKeep<-c("Ts_Valor","HR_Valor","QFE_Valor","utc")
+dgac<-dgac[toKeep]
+
+# adición de columnas fecha y dia para facilitar trabajo sobre el tiempo
+dgac$onlyTime<-as_hms(dgac$utc)
+dgac$onlyDate<-date(dgac$utc)
+
 # eliminacion de datasets temporales
 rm(hum)
 rm(qfe)
@@ -136,11 +144,15 @@ ggplot(dgac,aes(x=utc,y=Ts_Valor)) + geom_line() +
   ggtitle("Evolución de temperatura en el año") + 
   xlab("Mes") + 
   ylab("Temperatura")
+ggplot(dgac,aes(x=utc,y=Ts_Valor)) + geom_line() + 
+  ggtitle("Evolución de temperatura en el año") + 
+  xlab("Mes") + 
+  ylab("Temperatura")
 ggplot(dgac,aes(x=onlyTime,y=Ts_Valor,color=onlyDate)) + geom_jitter() + 
   ggtitle("Distribución de temperatura en el día") + 
   xlab("Hora") + 
   ylab("Temperatura")
-ggplot(dgac,aes(x=hour(onlyTime),y=Ts_Valor, alpha=0.5)) + geom_jitter() + 
+ggplot(dgac,aes(x=hour(onlyTime),y=Ts_Valor,alpha=0.5)) + geom_jitter() + 
   facet_wrap(month(dgac$utc)) +
   ggtitle("Distribución de temperatura a través de las horas, separada por meses") +
   xlab("Hora") + 
