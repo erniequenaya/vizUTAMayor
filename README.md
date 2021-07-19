@@ -13,3 +13,10 @@ Desde la fecha de presentacion la cantidad de registros de la base de datos ha d
 Esto afecta la precisión de los gráficos y textos presentados el 25 de junio por lo tanto es probable que la ejecucion del archivo .Rmd de errores
 Por favor leer y ejecutar "soloCodigo.R" en su reemplazo
 
+## Actualizacion 19-07
+ATENCION: El archivo visualization.Rmd va a compilar  **SOLO** si la contraseña de la DB es proveida como texto plano en vez de
+```
+.rs.askForPassword
+```
+
+

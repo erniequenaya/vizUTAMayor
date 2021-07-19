@@ -34,7 +34,7 @@ De esta forma, el montado de los sensores de este proyecto hacen registro de est
 Entendiéndose por "locales" a aquellos datos generados por los sensores montados cumpliendo el objetivo específico 1 del proyecto, ha de hacerse consulta al servidor de la carrera puesto a que en éste se encuentran centralizados los registros de los sensores
 De este forma habrimos conexión a la base de datos, solicitamos los registros y los guardamos en un dataframe
 
-```{r echo=FALSE}
+```{r warning=FALSE,message=FALSE, echo=FALSE}
 mydb = dbConnect(MySQL(), user='admin_mysql', password=.rs.askForPassword("Contraseña DB:"), dbname='weather', host='192.168.50.176')
 weather = dbSendQuery(mydb, "select * from WEATHER_MEASUREMENT")
 # df <- read.csv("weather.csv",header = TRUE, sep = ",")
@@ -61,19 +61,23 @@ Considerando que la exposición de la tierra al sol varía en ciclos de 24 horas
 ```{r hms, echo=FALSE}
 df2$onlyTime<-as_hms(df2$dateUTC)
 df2$onlyDate<-date(df2$dateUTC)
+### removiendo datos generados previos a la implementacion de ServerDate
+df2<-df2[!(df2$dateUTC<=ymd_hms("2021-06-25 16:45:25")),]
 ```
 
 ### Resumen de datos
 Se asegura la correcta importación de datos mediante chequeo de las primeras filas del dataset y la integridad de los tipos de datos mediante cálculo de estadísticas comunes
 
 ```{r  echo=FALSE}
-head(df2)
+#head(df2)
 summary(df2)
 ```
 
 
 ### Visualización de datos
+
 #### Temperatura
+
 Para iniciar, consideramos que nos interesa estudiar la evolución de las variables climáticas a través del tiempo, por ende, es que para todo tipo de gráfico a realizar, las variables temperatura, presión y humedad tendrán un eje dedicado y dependiente del momento en que fueron registradas.
 Bajo esta premisa de estudio, es que son útiles las gráficas de línea y de puntos
 De esta forma iniciamos la visualización de datos graficando todos los registros de temperatura
@@ -89,14 +93,9 @@ ggplot(df2,aes(x=dateUTC,y=AMBIENT_TEMPERATURE)) + geom_line() +
   xlab("Momento") + 
   ylab("Temperatura")
 
-ggplot(df2,aes(x=dateUTC,y=AMBIENT_TEMPERATURE,color=as.factor(onlyTime))) + geom_point() + 
-  ggtitle("Distribución de temperatura, color=momento de registro") + 
-  xlab("Hora") + 
-  ylab("Temperatura")
-
 ```
 
-Como se puede observar, los datos se encuentran dispersos y corresponden a registros diarios inconexos aunque con una ligera tendencia a la baja, por ende, es de mayor utilidad visualizarlos en un marco de 24 horas.
+Como se puede observar, los datos se encuentran dispersos y corresponden a registros diarios por momentos inconexos aunque con una ligera tendencia a la baja, por ende, es de mayor utilidad visualizarlos en un marco de 24 horas.
 
 ```{r echo=FALSE}
 #ggplot(df2,aes(x=onlyTime,y=AMBIENT_TEMPERATURE,color=as.factor(onlyDate))) + geom_point() + 
@@ -104,27 +103,36 @@ Como se puede observar, los datos se encuentran dispersos y corresponden a regis
 #  xlab("Hora") + 
 #  ylab("Temperatura")
 
-ggplot(df2,aes(x=onlyTime,y=AMBIENT_TEMPERATURE, color=as.factor(onlyDate))) + geom_line() + 
-  ggtitle("Distribución de temperatura cada 24 horas") + 
+ggplot(df2,aes(x=onlyTime,y=AMBIENT_TEMPERATURE,color=onlyDate)) + geom_point() + 
+  ggtitle("Distribución de temperatura, color=momento de registro") + 
   xlab("Hora") + 
   ylab("Temperatura")
 
+ggplot(df2,aes(x=onlyTime,y=AMBIENT_TEMPERATURE,alpha=0.5,color=onlyDate)) + geom_point() + 
+  facet_wrap(month(df2$dateUTC)) +
+  ggtitle("Distribución de temperatura a través de las horas, separada por meses") +
+  xlab("Hora") + 
+  ylab("Temperatura")
 ```
 
-Hacemos zoom a las horas en que se ubica  la mayor cantidad de datos.
+Se puede observar que la temperatura ambiental dibuja una baja paulatina y constante desde las 0 a 9 horas para luego iniciar un incremento brusco pero ruidoso hasta las 20 horas **aunque este hora varía dependiendo del día de toma del registro**
+Al dividir los registros por mes se puede observar con mayor claridad la disminución de temperatura en promedio entre junio y julio
+
+> Hacemos zoom a las horas en que se ubica  la mayor cantidad de datos.
 
 ```{r dplyr, echo=FALSE}
-df3<-df2
-df3<-df3 %>% 
-  filter(onlyTime > as_hms("14:00:00"))
-
-ggplot(df3,aes(x=onlyTime,y=AMBIENT_TEMPERATURE,color=as.factor(onlyDate))) + geom_line() + 
-  ggtitle("Distribución de temperatura pasadas las 14:00 horas") + 
-  xlab("Hora") + 
-  ylab("Temperatura")
+# df3<-df2
+# df3<-df3 %>% 
+#   filter(onlyTime > as_hms("14:00:00"))
+# 
+# ggplot(df3,aes(x=onlyTime,y=AMBIENT_TEMPERATURE,color=onlyDate)) + geom_point() + 
+#   ggtitle("Distribución de temperatura pasadas las 14:00 horas") + 
+#   xlab("Hora") + 
+#   ylab("Temperatura")
 ```
 
 #### Humedad relativa
+
 De esta forma, exploramos mediante los mismos pasos la evolución de la humedad relativa y la presión atmosférica
 
 1. Evolución de la variable a través del año
@@ -136,10 +144,16 @@ ggplot(df2,aes(x=dateUTC,y=HUMIDITY)) + geom_line() +
   xlab("Momento") + 
   ylab("Humedad relativa")
 
-ggplot(df2,aes(x=onlyTime,y=HUMIDITY, color=as.factor(onlyDate))) + geom_line() +
+ggplot(df2,aes(x=onlyTime,y=HUMIDITY, color=onlyDate)) + geom_point() +
  ggtitle("Evolución de humedad relativa cada 24 horas") +
  xlab("Hora") +
  ylab("Humedad relativa")
+
+ggplot(df2,aes(x=onlyTime,y=HUMIDITY,alpha=0.5,color=onlyDate)) + geom_point() + 
+  facet_wrap(month(df2$dateUTC)) +
+  ggtitle("Distribución de temperatura a través de las horas, separada por meses") +
+  xlab("Hora") + 
+  ylab("Temperatura")
 
 # ggplot(df3,aes(x=onlyTime,y=HUMIDITY,color=as.factor(onlyDate))) + geom_line() + 
 #   ggtitle("Evolución de humedad relativa pasadas las 14:00") + 
@@ -147,9 +161,12 @@ ggplot(df2,aes(x=onlyTime,y=HUMIDITY, color=as.factor(onlyDate))) + geom_line() 
 #   ylab("Humedad relativa")
 ```
 
-Se puede observar que la humedad relativa tiende a aumentar en las épocas más frías del año a la vez que también aumenta en las horas nocturnas, sin embargo, no se puede confirmar su comportamiento periódico (ciclo cada un día) sin un registro continuo de 24 horas.
+> Se puede observar que la humedad relativa tiende a aumentar en las épocas más frías del año a la vez que también aumenta en las horas nocturnas, sin embargo, no se puede confirmar su comportamiento periódico (ciclo cada un día) sin un registro continuo de 24 horas.
+
+Se puede observar que la humedad relativa ha tendido a mantener un promedio estable a traves del año, sin embargo, su comportamiento periódico (ciclo cada un día) presenta un comportamiento extravagante, pues se muestra estable durante horas nocturnas pero inestable durante horas diurnas, manteniendo su promedio pero disparando su varianza
 
 #### Presión atmosférica
+
 Teóricamente, a diferencia de la temperatura y la humedad relativa, la presión atmósferica se llega a dos máximos locales en un rango de 24 horas, primero y naturalmente en las horas de mayor exposición solar pues el calor disminuye la presión de las masas de aire sobre el agua, pero otra vez en las horas nocturnas, pues la drástica pérdida de calor de las masas de agua, disminuye la presión de las masas de aire también.
 Bajo este concepto, se procede a visualizar la evolución de la presión atmosférica al igual que en pasos anteriores
 
@@ -159,7 +176,7 @@ ggplot(df2,aes(x=dateUTC,y=AIR_PRESSURE)) + geom_line() +
   xlab("Momento") + 
   ylab("Presión")
 
-ggplot(df2,aes(x=onlyTime,y=AIR_PRESSURE, color=as.factor(onlyDate))) + geom_line() +
+ggplot(df2,aes(x=onlyTime,y=AIR_PRESSURE, color=onlyDate)) + geom_point() +
  ggtitle("Distribución de presión atmosférica cada 24 horas") +
  xlab("Hora") +
  ylab("Presión")
@@ -170,10 +187,14 @@ ggplot(df2,aes(x=onlyTime,y=AIR_PRESSURE, color=as.factor(onlyDate))) + geom_lin
 #   ylab("Presión")
 ```
 
-Se puede observar que la presión tiene tendencia a aumentar en las épocas más frías del año pero esta tendencia es menos clara que las presentes en temperatura y humedad relativa.
+>Se puede observar que la presión tiene tendencia a aumentar en las épocas más frías del año pero esta tendencia es menos clara que las presentes en temperatura y humedad relativa.
 Si es mas evidente su tendencia a aumentar pasadas las 14 horas del día pero de igual forma, no se puede asegurar su comportamiento periódico sin un registro continuo de 24 horas.
 
+Se puede observar que la presión, al igual que la humedad, no presenta una tendencia a subir o bajar en lo que va del año
+Si es mas evidente su comportamiento de doble ciclo a lo largo del día, presentando máximos locales a las 10 y 22 horas, y mínimos locales a las 5 y 16 horas
+
 #### Interrelación de los datos
+
 Analizado los cambios naturales de las variables en el tiempo es que ahora se procede a visualizar la relación **entre** las distribuciones de las variables. Considerando el pequeño tamaño del dataset es que se grafican las observaciones de forma cruda mediante puntos, utilizando una gradiente de colores para visuzalizar una tercera variable
 
 ```{r echo=FALSE}
@@ -181,7 +202,9 @@ ggplot(df2,aes(x=AMBIENT_TEMPERATURE,y=HUMIDITY,color=AIR_PRESSURE)) + geom_poin
 ggplot(df2,aes(x=AIR_PRESSURE,y=AMBIENT_TEMPERATURE,color=HUMIDITY)) + geom_point()
 ```
 
-En las gráficas se puede observar la formación de clústeres de datos, como en este caso el momento de creación de los registros no es de importancia, los registros actuales del set de datos son suficientes para afirmar la existencia de una correlación entre las variables climáticas las cuales, podrían ser las siguientes:
+>En las gráficas se puede observar la formación de clústeres de datos, como en este caso el momento de creación de los registros no es de importancia, los registros actuales del set de datos son suficientes para afirmar la existencia de una correlación entre las variables climáticas las cuales, podrían ser las siguientes:
+
+Los registros actuales del set de datos son suficientes para afirmar la existencia de una correlación entre las variables climáticas las cuales, podrían ser las siguientes:
 
 1. A mayor temperatura, menor humedad relativa del aire
 2. La presión atmosférica tiene un comportamiento en mayor parte independiente de las otras variables
@@ -205,15 +228,22 @@ Los gráficos de las observaciones se presentan para cada variable del siguiente
 2. Evolución de la variable a través del día
 3. Distribución de la variable a traves del día, separando por meses del año, con tal de detectas una tendencia
 
-```{r}
+```{r echo=FALSE}
 temp <- read.csv("../data/2021/200006_2021_Temperatura_.csv",header = TRUE, sep = ";")
 hum <- read.csv("../data/2021/200006_2021_Humedad_.csv",header = TRUE, sep = ";")
 qfe <- read.csv("../data/2021/200006_2021_PresionQFE_.csv",header = TRUE, sep = ";")
-dgac=merge(temp,hum,by="momento")
-dgac=merge(dgac,qfe,by="momento")
-dgac$utc<-dmy_hms(dgac$momento)
+
+temp$utc<-dmy_hms(temp$momento)
+hum$utc<-dmy_hms(hum$momento)
+qfe$utc<-dmy_hms(qfe$momento)
+dgac=merge(temp,hum,by="utc")
+dgac=merge(dgac,qfe,by="utc")
+toKeep<-c("Ts_Valor","HR_Valor","QFE_Valor","utc")
+dgac<-dgac[toKeep]
+
 dgac$onlyTime<-as_hms(dgac$utc)
 dgac$onlyDate<-date(dgac$utc)
+
 rm(hum)
 rm(qfe)
 rm(temp)

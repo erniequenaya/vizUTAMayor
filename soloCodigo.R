@@ -144,10 +144,6 @@ ggplot(dgac,aes(x=utc,y=Ts_Valor)) + geom_line() +
   ggtitle("Evolución de temperatura en el año") + 
   xlab("Mes") + 
   ylab("Temperatura")
-ggplot(dgac,aes(x=utc,y=Ts_Valor)) + geom_line() + 
-  ggtitle("Evolución de temperatura en el año") + 
-  xlab("Mes") + 
-  ylab("Temperatura")
 ggplot(dgac,aes(x=onlyTime,y=Ts_Valor,color=onlyDate)) + geom_jitter() + 
   ggtitle("Distribución de temperatura en el día") + 
   xlab("Hora") + 
