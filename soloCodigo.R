@@ -40,6 +40,7 @@ summary(df2)
 df2<-df2[!(df2$dateUTC<=ymd_hms("2021-06-25 16:45:25")),]
 # df2<-df2[!(df2$CREATED<=ymd_hms("2021-06-24 16:45:25")),]
 head(df2)
+# write.csv(df,"../data/local/weather26-7-20.csv", row.names = FALSE)
 
 ### Visualización de datos
 ## temperatura
@@ -54,7 +55,7 @@ ggplot(df2,aes(x=dateUTC,y=AMBIENT_TEMPERATURE,color=onlyTime)) + geom_point() +
   xlab("Hora") + 
   ylab("Temperatura")
 # Distribución temperatura cada 24 horas, clasificadas por día
-ggplot(df2,aes(x=onlyTime,y=AMBIENT_TEMPERATURE, color=as.factor(onlyDate))) + geom_line() + 
+ggplot(df2,aes(x=onlyTime,y=AMBIENT_TEMPERATURE, color=day(onlyDate))) + geom_line() + 
   ggtitle("Distribución de temperatura cada 24 horas") + 
   xlab("Hora") + 
   ylab("Temperatura")
