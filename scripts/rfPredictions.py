@@ -51,7 +51,7 @@ df2 = df2[['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month',
 
 # Carga de modelo
 # Caracteristicas: Input: 7 variables, Output: 3 variables, Predicciones: Pasos de 1 hora
-rfMultivar=joblib.load('../pyRF/rf-multivarOffset.joblib')
+rfMultivar=joblib.load('../../pyRF/rf-multivarOffset.joblib')
 
 x = rfMultivar.predict(df2[1:])
 
