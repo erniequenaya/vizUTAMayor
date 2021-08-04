@@ -85,6 +85,8 @@ stackPreds.month = stackPreds.month.round(0)
 
 try:
     stackPreds.to_sql('rfPredictions',mydb,if_exists='replace',index=False)
+    query = "ALTER TABLE rfPredictions ADD id INT PRIMARY KEY AUTO_INCREMENT;"
+    mydb.execute(query)
 except:
     mydb.close() #close the connectionexcept Exception as e:
     print('Error en conexion a base de datos')

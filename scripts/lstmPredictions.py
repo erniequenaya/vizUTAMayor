@@ -146,6 +146,8 @@ stackPreds.month = stackPreds.month.round(0)
 
 try: 
     stackPreds.to_sql('predictions',mydb,if_exists='replace',index=False)
+    query = "ALTER TABLE predictions ADD id INT PRIMARY KEY AUTO_INCREMENT;"
+    mydb.execute(query)
 except:
     print("error en conexion a db")
 
