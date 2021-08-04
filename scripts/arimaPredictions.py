@@ -54,7 +54,7 @@ df.head()
 # Agrupando registros por hora y fecha según promedio de registros, a la vez que detectar e inferir aquellos gaps de horas faltantes, 
 # ademas transformar la columna de fechas en index
 # Este es el mejor preprocesamiento de dato que hayas hecho, traspasar a dataPreprocessing.py
-df2 = df.groupby(panddas.Grouper(key="utc",freq='H')).mean()
+df2 = df.groupby(pandas.Grouper(key="utc",freq='H')).mean()
 # Rellenar gaps de hora, existe una serie de meotodos utilizables
 df2 = df2.interpolate(method='linear')
 # USA EL METODO .copy() PARA COPIAR DATAFRAMES, DE LO CONTRARIO LA VARIABLE CREADA ES UNA REFERENCIA AL DATAFRAME ORIGINAL NO UNA COPIA INDEPENDIENTE

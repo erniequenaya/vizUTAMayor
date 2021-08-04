@@ -18,14 +18,14 @@ try:
     # credentials = np.genfromtxt("../viz/scripts/pass",dtype='str')
     credentials = np.genfromtxt("pass",dtype='str')
     engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
+    mydb = engine.connect()
     #stackPreds = pandas.read_sql(query,mydb)
     query = "SELECT * FROM WEATHER_MEASUREMENT ORDER BY ID DESC LIMIT 17280;"
     # el ultimo dia solo hubo 5442 registros q no alcanzan pa 24 horas
     df = pandas.read_sql(query,mydb)
-except exception as e:
-    mydb.close() #close the connectionexcept Exception as e:
-    mydb.close()
-    print(str(e))
+except:
+    mydb.close() 
+    print("error conexion a db")
 
 df = df.iloc[::-1] # dando vuelta el dataframe
 df["utc"] = pandas.to_datetime(df["serverDate"],format='%Y-%m-%d %H:%M:%S')
