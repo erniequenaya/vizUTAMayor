@@ -15,8 +15,9 @@ import pymysql
 
 try:
     # para rescatar las ultimas 24 horas: 24 * 60 * 12
-    engine = sqlalchemy.create_engine('mysql+pymysql://:@192.168.50.176/weather')
-    mydb = engine.connect()
+    # credentials = np.genfromtxt("../viz/scripts/pass",dtype='str')
+    credentials = np.genfromtxt("pass",dtype='str')
+    engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
     #stackPreds = pandas.read_sql(query,mydb)
     query = "SELECT * FROM WEATHER_MEASUREMENT ORDER BY ID DESC LIMIT 17280;"
     # el ultimo dia solo hubo 5442 registros q no alcanzan pa 24 horas
