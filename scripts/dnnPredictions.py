@@ -48,6 +48,7 @@ modelStd = [3.0178459228432164, 7.216205483706377, 2.2937924094103446, 6.9222192
 stackPredictors = (stackPredictors - modelMean[3:]) / modelStd[3:]
 
 # Cargado de modelo
+# dnnMultivar = tf.keras.models.load_model('../../pyCNN/deepNN-multiV2')
 dnnMultivar = tf.keras.models.load_model('../deepNN-multiV2')
 # Realizando pronosticos
 stackPreds = dnnMultivar.predict(stackPredictors)
@@ -69,9 +70,12 @@ stackPreds.columns = ['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','da
 stackPreds.AMBIENT_TEMPERATURE = stackPreds.AMBIENT_TEMPERATURE.round(3)
 stackPreds.HUMIDITY = stackPreds.HUMIDITY.round(3)
 stackPreds.AIR_PRESSURE = stackPreds.AIR_PRESSURE.round(3)
-stackPreds.hour = stackPreds.hour.round(0)
-stackPreds.day = stackPreds.day.round(0)
-stackPreds.month = stackPreds.month.round(0)
+stackPreds.hour = stackPreds.hour.astype(int)
+stackPreds.day = stackPreds.day.astype(int)
+stackPreds.month = stackPreds.month.astype(int)
+
+stackPreds['utc'] =stackPreds.year.astype(str)+'-'+stackPreds.month.astype(str)+'-'+stackPreds.day.astype(str)+' '+stackPreds.hour.astype(str)+':00:00'
+stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
 
 try:
     #credentials = np.genfromtxt("../viz/scripts/pass",dtype='str')
