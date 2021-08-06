@@ -1,3 +1,5 @@
+#!/root/prediccionService/venv/bin/python
+
 # not explained arima
 
 import os
@@ -94,10 +96,15 @@ stackPreds.pop('utc')
 stackPreds.AMBIENT_TEMPERATURE = stackPreds.AMBIENT_TEMPERATURE.round(3)
 stackPreds.HUMIDITY = stackPreds.HUMIDITY.round(3)
 stackPreds.AIR_PRESSURE = stackPreds.AIR_PRESSURE.round(3)
-stackPreds.hour = stackPreds.hour.round(0)
-stackPreds.day = stackPreds.day.round(0)
-stackPreds.month = stackPreds.month.round(0)
-#stackPreds.reset_index(drop=True,inplace=True)
+stackPreds.hour = stackPreds.hour.astype(int)
+stackPreds.day = stackPreds.day.astype(int)
+stackPreds.month = stackPreds.month.astype(int)
+stackPreds.year = stackPreds.year.astype(int)
+now = datetime.datetime.now()
+stackPreds['year'] = now.year
+
+stackPreds['utc'] =stackPreds.year.astype(str)+'-'+stackPreds.month.astype(str)+'-'+stackPreds.day.astype(str)+' '+stackPreds.hour.astype(str)+':00:00'
+stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
 
 try:
     stackPreds.to_sql('arimaPredictions',mydb,if_exists='replace',index=False)
