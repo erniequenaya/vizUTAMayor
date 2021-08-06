@@ -128,7 +128,6 @@ for i in range(0,72):
 stackPreds.columns = ['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month']
 stackPreds = stackPreds.reset_index()
 stackPreds = stackPreds[['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month']]
-stackPreds['year'] = now.year
 
 #stackPreds = stackPreds.reset_index()
 
@@ -144,6 +143,7 @@ stackPreds.AIR_PRESSURE = stackPreds.AIR_PRESSURE.round(3)
 stackPreds.hour = stackPreds.hour.astype(int)
 stackPreds.day = stackPreds.day.astype(int)
 stackPreds.month = stackPreds.month.astype(int)
+stackPreds['year'] = now.year
 stackPreds.year = stackPreds.year.astype(int)
 
 stackPreds['utc'] =stackPreds.year.astype(str)+'-'+stackPreds.month.astype(str)+'-'+stackPreds.day.astype(str)+' '+stackPreds.hour.astype(str)+':00:00'

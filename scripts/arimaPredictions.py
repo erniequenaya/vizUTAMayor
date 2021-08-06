@@ -75,13 +75,16 @@ model_fit = model.fit()
 # steps que el mismo modelo va creando al paso en vez de valerse de su 'memoria' sobre la estacionalidad de los eventos con los que fue alimentado el 
 # modelo (capacidad similar a los metodos .predict de modelos ML alimentados de forma exclusiva por caracteristicas de tiempo, como mes y horas)
 
-stackPreds['AMBIENT_TEMPERATURE'] = model_fit.forecast(24)
+# Definiendo horas en el futuro a predecir
+future = 72
+
+stackPreds['AMBIENT_TEMPERATURE'] = model_fit.forecast(future)
 model = ARIMA(series['HUMIDITY'], order=(24,1,0))
 model_fit = model.fit()
-stackPreds['HUMIDITY'] = model_fit.forecast(24)
+stackPreds['HUMIDITY'] = model_fit.forecast(future)
 model = ARIMA(series['AIR_PRESSURE'], order=(24,1,0))
 model_fit = model.fit()
-stackPreds['AIR_PRESSURE'] = model_fit.forecast(24)
+stackPreds['AIR_PRESSURE'] = model_fit.forecast(future)
 
 # El index actual posee ciertas restricciones de dato al ser timestamp + periodico, por lo tanto tenemos que crear las caracteristicas de tiempo
 # de forma manual, y luego dropear la fila con el tipo de dato 'date'
