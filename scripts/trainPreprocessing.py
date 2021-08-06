@@ -11,6 +11,7 @@ import pymysql
 
 def createTimeFeatures (dfToExpand):
     # despite explicitly returning a dataframe as a parameter, this function still modifies the original dataframe, idk why
+    # La causa es debido al tratamiento ViewVScopy de pandas
     dfToExpand['hour'] = pandas.to_datetime(dfToExpand['utc']).dt.hour
     dfToExpand['day'] = pandas.to_datetime(dfToExpand['utc']).dt.day
     dfToExpand['month'] = pandas.to_datetime(dfToExpand['utc']).dt.month
@@ -23,8 +24,7 @@ df = pandas.read_csv("../../data/local/dataPreprocessed.csv")
 # Cargando datos de sensores
 try:
     credentials = np.genfromtxt("pass",dtype='str')
-    engine = sqlalchemy.create_engine("mysql+pymysql://admin_mysql:Climauta12@192.168.50.176/weather")
-    #engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
+    engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
     mydb = engine.connect()
     # Considerando que los datos precargados por csv cuentan con registros hasta el 31 de julio es que hacemos query desde el 1 de agosto
     query = "SELECT * FROM WEATHER_MEASUREMENT WHERE serverDate >= '2021-08-01 00:00:00';"
