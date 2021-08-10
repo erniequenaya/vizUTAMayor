@@ -119,4 +119,4 @@ except:
 
 mydb.close()
 engine.dispose()
-## script ready to be callbablew
+## script ready to be callable

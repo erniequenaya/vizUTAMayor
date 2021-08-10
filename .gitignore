@@ -1,6 +1,5 @@
 # exclude messy file
-helper*
-rmdComentado*
+dontTrack/*
 weather2*
 .R*
 scripts/pass

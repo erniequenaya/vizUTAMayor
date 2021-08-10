@@ -1,0 +1,138 @@
+{
+ "metadata": {
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.6-final"
+  },
+  "orig_nbformat": 2,
+  "kernelspec": {
+   "name": "python39664bitb48f37e888a140808da316066f1ee86a",
+   "display_name": "Python 3.9.6 64-bit"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2,
+ "cells": [
+  {
+   "source": [
+    "# Presentación de modelos predictivos"
+   ],
+   "cell_type": "markdown",
+   "metadata": {}
+  },
+  {
+   "source": [
+    "## Requerimientos\n",
+    "1. Prediccion de variables climáticas con error cercano al 0%\n",
+    "2. En un lapso de tiempo de al menos 24 horas\n",
+    "3. Presentación de a lo menos cuatro modelos\n",
+    "\n",
+    "**Opcionales:**\n",
+    "\n",
+    "1. Generación de pronósticos a una semana\n",
+    "2. Determinación de condiciones como *nuablado* o *soleado*"
+   ],
+   "cell_type": "markdown",
+   "metadata": {}
+  },
+  {
+   "source": [
+    "### R o Python\n",
+    "Si bien se posee mas experiencia de uso de R se decide ocupar Python puro para la creación de los modelos debido a la mayor disponibilidad de soporte y capacidad de paralelización de sus procesos (R sin paquetes externos no puede más de una núcleo por procesador)\n",
+    "\n",
+    "> De ahora en adelante se usara el término \"datos locales\" para hacer referencia a los datos creados mediante registros de los sensores UTA Mayor y datos DGAC a aquellos descargados desde la página de la Dirección de Aeronáutica Civil\n",
+    "\n",
+    "> De ahora en adelante se ocupan las siglas **Ts, HR y QFE** para hacer referencia a las variables **Temperatura, Humedad relativa y Presión atmosférica** respectivamente, por **date** se hará referencia al **momento de captura** del registro\n",
+    "\n",
+    "### Importado de librerías\n"
+   ],
+   "cell_type": "markdown",
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Uso universal\n",
+    "import os\n",
+    "import datetime\n",
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
+    "import pandas\n",
+    "from math import sqrt\n",
+    "from sklearn.metrics import mean_squared_error\n",
+    "\n",
+    "# 1er modelo\n",
+    "from statsmodels.tsa.arima.model import ARIMA\n",
+    "# 2do y cuarto modelo\n",
+    "import tensorflow as tf\n",
+    "# 3er modelo\n",
+    "from sklearn.ensemble import RandomForestRegressor\n",
+    "# import joblib"
+   ]
+  },
+  {
+   "source": [
+    "## Iteración uno: Modelo RF crudo\n",
+    "Con el fin de obtener de forma inmediata una línea base de efectividad a mejorar mediante la creación de nuevos modelos a la vez que un acercamiento al uso de Python para el ML, es que se inicia este proceso construyendo un bosque aleatorio **(RF)** simple que consuma los datos locales de forma cruda, este algoritmo es de especial utilidad para esta tarea puesto a que no requiere la afinación de hiperparámetros (como si los requeriría una red neuronal **-DNN-**)\n",
+    "\n",
+    "## Preparación de datos\n",
+    "Esta iteración se destaca por el escaso preprocesamiento de datos al alimentar el modelo\n",
+    "#### Selección de datos\n",
+    "+ Datos completamente locales (~100.000 aprox.)\n",
+    "**Limpieza de datos**\n",
+    "No aplica, por el contrario no existen valores nulos en los datos locales por lo tanto de esta iteración en adelante se omite este paso\n",
+    "\n",
+    "## Modelo\n",
+    "+ Fórmula: Ts ~ HR + QFE + date\n",
+    "\n",
+    "## Evaluación\n",
+    "El modelo no se pudo concretar\n",
+    "+ El consumo de recursos computacionales es excesivo\n",
+    "+ La predicción de una variable climática cada 5 segundos puede resultar innecesaria considerando que se ha de generar pronósticos a una semana en el futuro\n",
+    "    - Esto resultaría en 168*60*12 predicciones, es decir ~121.000 registros por modelo\n",
+    "+ Los *predictores* (HR + QFE + date)\n",
+    "\n",
+    "\n",
+    "explicar de esta forma\n",
+    "solo tiempo -> concepto de repeticion de señales -> concepto de memoria\n",
+    "\n",
+    "\n"
+   ],
+   "cell_type": "markdown",
+   "metadata": {}
+  },
+  {
+   "source": [
+    "## Iteración dos: Modelo ARIMA\n",
+    "**Datos como serie de tiempo**\n",
+    "\n",
+    "## Preparación de datos\n",
+    "### Selección de datos\n",
+    "### Limpieza de datos\n",
+    "### Construcción\n",
+    "### Integración\n",
+    "### Formateo\n"
+   ],
+   "cell_type": "markdown",
+   "metadata": {}
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ]
+}
