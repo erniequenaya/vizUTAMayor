@@ -25,7 +25,7 @@ try:
     credentials = np.genfromtxt("pass",dtype='str')
     engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
     mydb = engine.connect()
-    # Obteniendo ultimos 720 (60*12) registros, equivalentes a una hora de datos o mas, en caso de que haya faltantes
+    # Obteniendo ultimos 720 (60*12) registros, equivalentes a una hora de datos, o mas, en caso de que haya faltantes
     # y evitar lecturas fluctuantes
     query = "SELECT * FROM WEATHER_MEASUREMENT ORDER BY ID DESC LIMIT 16720;"
     df = pandas.read_sql(query,mydb)
@@ -89,7 +89,7 @@ stackPreds['utc'] =stackPreds.year.astype(str)+'-'+stackPreds.month.astype(str)+
 stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
 
 try:
-    stackPreds.to_sql('rfPredictions',mydb,if_exists='replace',index=False)
+    stackPreds.to_sql('rfPredictions',mydb,if_exists='append',index=False)
     query = "ALTER TABLE rfPredictions ADD id INT PRIMARY KEY AUTO_INCREMENT;"
     mydb.execute(query)
 except:

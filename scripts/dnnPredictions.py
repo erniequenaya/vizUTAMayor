@@ -82,7 +82,7 @@ try:
     credentials = np.genfromtxt("pass",dtype='str')
     engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
     mydb = engine.connect()
-    stackPreds.to_sql('dnnPredictions',mydb,if_exists='replace',index=False)
+    stackPreds.to_sql('dnnPredictions',mydb,if_exists='append',index=False)
     query = "ALTER TABLE dnnPredictions ADD id INT PRIMARY KEY AUTO_INCREMENT;"
     mydb.execute(query)
 except:

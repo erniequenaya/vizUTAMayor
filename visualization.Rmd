@@ -35,7 +35,7 @@ Entendiéndose por "locales" a aquellos datos generados por los sensores montado
 De este forma habrimos conexión a la base de datos, solicitamos los registros y los guardamos en un dataframe
 
 ```{r warning=FALSE,message=FALSE, echo=FALSE}
-mydb = dbConnect(MySQL(), user='admin_mysql', password=.rs.askForPassword("Contraseña DB:"), dbname='weather', host='192.168.50.176')
+mydb = dbConnect(MySQL(), user=.rs.askForPassword("Usuario DB:"), password=.rs.askForPassword("Contraseña DB:"), dbname='weather', host='192.168.50.176')
 weather = dbSendQuery(mydb, "select * from WEATHER_MEASUREMENT")
 # df <- read.csv("weather.csv",header = TRUE, sep = ",")
 df = fetch(weather, n=-1)

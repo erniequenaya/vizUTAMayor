@@ -110,7 +110,7 @@ stackPreds['utc'] =stackPreds.year.astype(str)+'-'+stackPreds.month.astype(str)+
 stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
 
 try:
-    stackPreds.to_sql('arimaPredictions',mydb,if_exists='replace',index=False)
+    stackPreds.to_sql('arimaPredictions',mydb,if_exists='append',index=False)
     query = "ALTER TABLE arimaPredictions ADD id INT PRIMARY KEY AUTO_INCREMENT;"
     mydb.execute(query)
 except:

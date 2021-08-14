@@ -7,7 +7,7 @@ library(ggplot2)
 # Configurando conexion a DB
 # proveer contraseña mediante cuadro de dialogo
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-mydb = dbConnect(MySQL(), user='admin_mysql', password=.rs.askForPassword("Contraseña DB:"), dbname='weather', host='192.168.50.176')
+mydb = dbConnect(MySQL(), user=.rs.askForPassword("Contraseña DB:"), password=.rs.askForPassword("Contraseña DB:"), dbname='weather', host='192.168.50.176')
 weather = dbSendQuery(mydb, "select * from WEATHER_MEASUREMENT")
 df = fetch(weather, n=-1)
 
