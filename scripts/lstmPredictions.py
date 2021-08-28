@@ -10,8 +10,13 @@ import pandas
 import tensorflow as tf
 import sqlalchemy
 import pymysql
-#import mysql.connector as connection
-#from sklearn.preprocessing import MinMaxScaler
+
+def createTimeFeatures (dfToExpand):
+    dfToExpand['hour'] = pandas.to_datetime(dfToExpand['utc']).dt.hour
+    dfToExpand['day'] = pandas.to_datetime(dfToExpand['utc']).dt.day
+    dfToExpand['month'] = pandas.to_datetime(dfToExpand['utc']).dt.month
+    dfToExpand['year'] = pandas.to_datetime(dfToExpand['utc']).dt.year
+    return dfToExpand
 
 try:
     # para rescatar las ultimas 24 horas: 24 * 60 * 12
@@ -30,82 +35,72 @@ except:
 df = df.iloc[::-1] # dando vuelta el dataframe
 df["utc"] = pandas.to_datetime(df["serverDate"],format='%Y-%m-%d %H:%M:%S')
 df = df[['AMBIENT_TEMPERATURE','AIR_PRESSURE','HUMIDITY','utc']]
-# generando variables de tiempo para alimentar los modelos
-# df['minutes'] = pandas.to_datetime(df['utc']).dt.minute
-df['hour'] = pandas.to_datetime(df['utc']).dt.hour
-df['day'] = pandas.to_datetime(df['utc']).dt.day
-df['month'] = pandas.to_datetime(df['utc']).dt.month
-# agrupando parametros segun hora para obtener un dataset de 24 filas
-df2 = df.groupby('hour').mean()
-df2['hour'] = df2.index
-row = df2.mean()
 
+# Agrupando parametros segun hora para obtener un dataset de 24 filas
+df2 = df.groupby(pandas.Grouper(key="utc",freq='H')).mean()
+
+# Obteniendo la hora actual para establecerla como inicio de las predicciones
+# now = datetime.datetime.now()
+# lastHour = df2[-1:].copy()
+# lastHour.hour = now.hour
+# lastHour.day = now.day
+# lastHour.month = now.month
+# df2 = df2.append(lastHour)
+# Abandonado: Se decide iniciar las predicciones desde el momento del ultimo registro
+now = df2[-1:]
+now = now.reset_index()
+now = now['utc']
+
+# Rellenar gaps de hora si es que existen una serie de meotodos utilizables
+# solo por ahora, rellenamos los periodos de las ultimas 24 horas faltantes mediante interpolado lineal
+df2 = df2.interpolate(method='linear')
+
+# Generando variables de tiempo para alimentar los modelos
 # basta con que se genere 1 registro cada una hora para poder alimentar el modelo
-##### solo por ahora, rellenamos los periodos de las ultimas 24 horas faltantes con promedios de los otros registros ######
-df3 = pandas.DataFrame(columns=row.keys())
-for i in range(24):
-    if i in df2.hour:
-        print(i)
-    else:
-        row.hour = i
-        df3 = df3.append(row,ignore_index=True)
-
-df2 = df2.append(df3)
-df2 = df2.sort_values('hour')
-df2 = df2.reset_index(drop=True)
-#df2.plot(subplots=True)
-#plt.show()
-##### solo por ahora, rellenamos los periodos de las ultimas 24 horas faltantes con promedios de los otros registros ######
+df2 = df2.reset_index()
+df2 = createTimeFeatures(df2)
 
 # Normalizando manualmente
 # el modelo fue entrenado con valores normalizados generados en base a metricas -promedio, desviacion estandar- del dataset de 
-# entrenamiento, por lo tanto, estas metricas se traspasan a los predictandos(?) actuales para respetar los valores
+# entrenamiento, por lo tanto, estas metricas se traspasan a los predictores actuales para respetar los valores
 # con los que fue entrenado el modelo
 
 #modelMean = {'AMBIENT_TEMPERATURE': 18.833937942048827, 'HUMIDITY': 67.28831089816715, 'AIR_PRESSURE': 1009.0120921743098, 'hour': 11.500418282759146, 'day': 15.734086242299794, 'month': 6.521370446421781}
 #modelStd = {'AMBIENT_TEMPERATURE': 3.0178459228432164, 'HUMIDITY': 7.216205483706377, 'AIR_PRESSURE': 2.2937924094103446, 'hour': 6.92221927192334, 'day': 8.801762436194657, 'month': 3.448822871574395}
-modelMean = [18.833937942048827, 67.28831089816715, 1009.0120921743098, 11.500418282759146, 15.734086242299794, 6.521370446421781]
-modelStd = [3.0178459228432164, 7.216205483706377, 2.2937924094103446, 6.92221927192334, 8.801762436194657, 3.448822871574395]
+train_mean = [18.833937942048827, 67.28831089816715, 1009.0120921743098, 11.500418282759146, 15.734086242299794, 6.521370446421781]
+train_std = [3.0178459228432164, 7.216205483706377, 2.2937924094103446, 6.92221927192334, 8.801762436194657, 3.448822871574395]
 # you can straight substract a list from dataframe without giving key values!
 df3 = df2[['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month']]
-df3 = (df3 - modelMean) / modelStd
+# se ocuparan unicamente las ultimas 24 horas para la generación de pronosticos
+df3 = df3[-24:]
+df3 = (df3 - train_mean) / train_std 
 df3 = df3.to_numpy()
 # reshape a valores actuales
 df3 = np.reshape(df3,(-1,24,6))
 # df3 just became a 3 dimensional array jesus...
 
-# Cargado de modelos, 1 por variable
-tsModel = tf.keras.models.load_model('../dense+lstmMnormTs/')
-qfeModel = tf.keras.models.load_model('../dense+lstmMnormQFE/')
-#hrModel = tf.keras.models.load_model('./dense+lstmHRv2/') # to load with a proper model
+# Cargado de modelo
+lstmModel = tf.keras.models.load_model('../../models/lstm/')
 
-#x = tsModel.predict(df3) # array([[0.0564339]], dtype=float32), meanAsDict -0.5708247, meanAsList 1.0230861
-#y = qfeModel.predict(df3) # array([[2.6169283]], dtype=float32), meanAsDict 2.0415623, meanAsList -2.3020828
-#z = 1.5
-#########
-#x = x*modelStd[0]+modelMean[0]
+stackPreds = pandas.DataFrame()
+lastTrainBatch = np.array(df3)
+# now reshape this lastTrainBatch to meet what input_shape the model expects
+winSize = 24 
+numFeatures = 6 
+lastTrainBatch = lastTrainBatch.reshape((1,winSize,numFeatures))
+# preparando variables para entrar al loop autoregresivo
+x = lstmModel.predict(lastTrainBatch)
 
-# Implementando funcion normalizadora
 def norm(value,index):
-    value = (value - modelMean[index]) / modelStd[index]
+    #value = (value - modelMean[index]) / modelStd[index]
+    value = (value - train_mean[index]) / train_std[index]
     return value
 
-# implementando autoregresion (windowing system manual)
-
-#norm(now.hour,3)
-#df4 = np.array([x,y,z,now.hour,now.day,now.month],dtype="float32")
-#df4 = np.array([x,y,z,norm(now.hour,3),norm(now.day,4),norm(now.month,5)],dtype="float32")
-now = datetime.datetime.now()
-stackPreds = pandas.DataFrame()
-x = tsModel.predict(df3)
-y = 1.5
-z = qfeModel.predict(df3)
-#stackPreds = pandas.DataFrame(columns=row.keys())
-# para predecir mas horas basta con cambiar 12 a 168
 for i in range(0,72):
     delta = now + datetime.timedelta(0,i*3600)
     #temp = np.array([x,y,z,delta.hour,delta.day,delta.month],dtype="float32")
-    temp = np.array([x,y,z,norm(delta.hour,3),norm(delta.day,4),norm(delta.month,5)],dtype="float32")
+    # temp = np.array([x,y,z,norm(delta.hour,3),norm(delta.day,4),norm(delta.month,5)],dtype="float32")
+    temp = np.array([x[0,0],x[0,1],x[0,2],norm(delta.dt.hour,3),norm(delta.dt.day,4),norm(delta.dt.month,5)],dtype="float32")
     stackPreds = stackPreds.append(pandas.DataFrame(temp).transpose())
     # df3 = np.vstack((df3[0],temp))
     # df4 = np.vstack((df4,temp))
@@ -113,17 +108,9 @@ for i in range(0,72):
     df3 = np.vstack((cde,temp))
     df3 = np.delete(df3, (0), axis=0)
     df3 = np.reshape(df3,(-1,24,6))
-    x = tsModel.predict(df3)
-    y = 1.5
-    z = qfeModel.predict(df3)
+    x = lstmModel.predict(df3)
 
-#modelStd[0]+modelMean[0]
-
-#plt.plot(df4[0,0:24,0])
-#plt.plot(df4[0,0:24,1])
-#plt.plot(df4[0,0:24,2])
-#plt.grid()
-#plt.show()
+stackPreds = stackPreds.reset_index(drop=True)
 
 stackPreds.columns = ['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month']
 stackPreds = stackPreds.reset_index()
@@ -132,17 +119,19 @@ stackPreds = stackPreds[['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour',
 #stackPreds = stackPreds.reset_index()
 
 # de-normalizando predicciones
-stackPreds=stackPreds*modelStd+modelMean
+stackPreds=stackPreds*train_std+train_mean
 # stackPreds.plot(subplots=True)
 # plt.show()
 # plt.plot(stackPreds['AMBIENT_TEMPERATURE'])
 
+# Formateo de datos para carga de estos a DB
 stackPreds.AMBIENT_TEMPERATURE = stackPreds.AMBIENT_TEMPERATURE.round(3)
 stackPreds.HUMIDITY = stackPreds.HUMIDITY.round(3)
 stackPreds.AIR_PRESSURE = stackPreds.AIR_PRESSURE.round(3)
 stackPreds.hour = stackPreds.hour.astype(int)
 stackPreds.day = stackPreds.day.astype(int)
 stackPreds.month = stackPreds.month.astype(int)
+now = datetime.datetime.now()
 stackPreds['year'] = now.year
 stackPreds.year = stackPreds.year.astype(int)
 

@@ -1,23 +1,16 @@
 #!/root/prediccionService/venv/bin/python
 
-# not explained arima
-
 import os
 import datetime
-#import matplotlib as mpl
 #import matplotlib.pyplot as plt
 import numpy as np
 import pandas
-#import tensorflow as tf
 import sqlalchemy
 import pymysql
-#import statsmodels
 from statsmodels.tsa.arima.model import ARIMA
 #import joblib
 
 def createTimeFeatures (dfToExpand):
-    # A pesar de estar definida como una funcion que crea y retorna una copia del dataset que se le es proveida
-    # aun así el dataset original es modificado, no se por que
     dfToExpand['hour'] = pandas.to_datetime(dfToExpand['utc']).dt.hour
     dfToExpand['day'] = pandas.to_datetime(dfToExpand['utc']).dt.day
     dfToExpand['month'] = pandas.to_datetime(dfToExpand['utc']).dt.month
@@ -31,7 +24,7 @@ def createTimeFeatures (dfToExpand):
 #df['utc'] = pandas.to_datetime(df['utc'])
 #df.plot(subplots=True)
 #plt.show()
-# Leer desde un set de datos preprocesado es obsoletado en el modelo ARIMA pues su uso de recursos es demasiado intensivo
+# Leer desde un set de datos preprocesado es no recomendado en el modelo ARIMA pues su uso de recursos es intensivo y resulta en un modelo pesado (~2gb)
 
 ### Por lo tanto se carga y predice a corto-plazo desde la db ###
 
