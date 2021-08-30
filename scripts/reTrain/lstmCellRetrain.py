@@ -45,7 +45,6 @@ dates_df = df.pop('year')
 dates_df = df.pop('utc')
 
 ## Normalizado
-# De todas las variables, pues así el modelo es menos sensible a diferencias entre varianzas y promedios  de las variables Input
 df2 = df.copy()
 train_mean = df.mean()
 train_std = df.std()
@@ -66,9 +65,9 @@ train_labels = train_labels.to_numpy()
 test_labels = test_labels.to_numpy()
 
 ## Implementando sistema de ventanas
+
 ## mas info: https://www.gitmemory.com/issue/tensorflow/tensorflow/44592/752315411
 ##           https://www.tensorflow.org/tutorials/structured_data/images/lstm_1_window.png
-
 winSize = 24 
 numFeatures = 6 
 train_gen = tf.keras.preprocessing.sequence.TimeseriesGenerator(train_df,train_labels,length=winSize)
@@ -81,20 +80,19 @@ test_gen = tf.keras.preprocessing.sequence.TimeseriesGenerator(test_df,test_labe
 # print(f'Predict this y: \n {y[0]}')
 
 ## Creación de arquitectura del modelo
-# El modelo consiste en una capa recurrente LSTM, una capa Flatten para disminuir la dimensionalidad de las predicciones
+# El modelo consiste en una capa de células LSTM, una capa Flatten para disminuir la dimensionalidad de las predicciones
 # y una capa Dense para convertir los outputs de las capas anteriores en el output deseado final (3 variables) 
-# La capa LSTM, piedra angular de este modelo, en estricto rigor es un estructura LSTMcell+RNN que reduce dimensionalidad
-# Es decir, consta de una serie de celulas LSTM conectadas de forma secuencial como una RNN
-# Por lo tanto, primero se ha de entender cómo funciona una célula LSTM 
-# mas info: http://colah.github.io/posts/2015-08-Understanding-LSTMs/
-# Y luego, como estas interactuan de forma coordinada para crear uno, o más Outputs
-# mas info: https://stackoverflow.com/questions/38714959/understanding-keras-lstms/5023556
-# El link anterior además explica las caracteristicas return_sequences y stateful, las cuales son útiles para el estudio de series de tiempo
-# pues cada registro corresponde a un evento dependiente de eventos anteriores, siendo esto verdad para cada y todos los eventos
-
+# El uso de células LSTM por separado 
+# (puesto que la implementacion de keras.layers.LSTM en estricto rigor es un estructura LSTM+RNN que reduce dimensionalidad)
+# Permite que las celulas tengan 'memorias' independientes que aportan valor de formas iguales  
+# Añadir mas capas al modelo tiende a acelarar el overfitting y disminuir la varianza de las predicciones 
+# 
 nnHM = tf.keras.Sequential()
-nnHM.add(tf.keras.layers.LSTM(72,input_shape=(winSize,numFeatures,),return_sequences=True))
+# nnHM.add(tf.keras.layers.LSTMCell(432,input_shape=(winSize,numFeatures,),return_state=True))      # 288 due to 6*24*2days
+nnHM.add(tf.keras.layers.LSTMCell(365,input_shape=(winSize,numFeatures,),stateful=True))      # 288 due to 6*24*2days
+# nnHM.add(tf.keras.layers.Dense(72))
 nnHM.add(tf.keras.layers.Flatten())
+# # nnHM.add(tf.keras.layers.Dense([24,3]))   # this output format doesnt work as the TSgen was not defined with with large-windows outputs
 nnHM.add(tf.keras.layers.Dense(3))
 
 nnHM.compile(
@@ -115,8 +113,8 @@ history = nnHM.fit_generator(
 nnHM.save("../../../models/lstm")
 # nnHM = tf.keras.models.load_model("../models/lstm")
 
-## Elaboracion de pronosticos
-# El siguiente codigo se muestra solo con proposito de debugging, por lo tanto no se ha de descomentar cuando este script sea
+## Elaboracion de una prediccion 
+# el siguiente codigo se muestra solo con proposito de debugging, por lo tanto no se ha de descomentar cuando este script sea
 # implementado en el servidor
 
 # Se obtiene los ultimos 24 registros del set de entrenamiento, se formatean como 1 ventana y se predice en base a esta ventana
@@ -128,6 +126,41 @@ lastTrainBatch = lastTrainBatch.reshape((1,winSize,numFeatures))
 lstmPred = nnHM.predict(lastTrainBatch,verbose=1)
 lstmPred
 
+# Notese la diferencia contra un test de prediccion estandar
+x = nnHM.predict_generator(test_gen,verbose=1)
+x.shape
+# Las ventanas pasadas no son multipaso pues el test_gen alimenta la prediccion con ventanas independiente de las predicciones generadas por el modelo
+# por lo tanto, el modelo no "camina" por sobre sus propias predicciones
+
+# Para poder mostrar las predicciones en web, estas deben ser de-normalizadas (regresadas a su rango de valores originales) y convertidas a un dataframe
+# para facilitar su stacking
+# De-normalizacion
+X = pandas.DataFrame(x)
+X.columns = ['Ts_Valor','HR_Valor','QFE_Valor']
+varToPred = ['Ts_Valor','HR_Valor','QFE_Valor']
+X = X*train_std[varToPred]+train_mean[varToPred]
+X
+
+# edefine test_df to fit preds
+lendf = lendf+24
+test_df = df[lendf:len(df)]
+test_labels = df[lendf:len(df)]
+test_labels = test_labels*train_std+train_mean
+test_labels = test_labels.reset_index(drop=True)
+
+plt.plot(test_labels[['Ts_Valor']][24:],label='testDF')
+plt.plot(X[['Ts_Valor']],label='dense+lstm')
+plt.grid()
+plt.legend()
+plt.show()
+
+a = (X - test_labels).mean()
+a
+
+
+# retake df dates for 'now' value when testdf sizes are altered
+test_df = df2[lendf:len(df)]
+
 # Recuerda que 1 prediccion requiere 24 horas de datos, por lo tanto, el 'now' para el modelo corresponde a la hora siguiente de ese tramo de
 # 24 horas de datos
 # when 0.995 split
@@ -135,17 +168,16 @@ lstmPred
 # when 0.9 split
 now = pandas.to_datetime('2021-03-23 06:00:00')
 
-stackPreds = pandas.DataFrame()
-# El nombre df3 es mas corto, esta es la unica razon por la que se usa desde ahora en reemplazo de lastTrainBatch
 df3 = train_df[-24:]
-df3 = np.array(df3)
+stackPreds = pandas.DataFrame()
+lastTrainBatch = train_df[-24:]
+lastTrainBatch = np.array(lastTrainBatch)
 # now reshape this lastTrainBatch to meet what input_shape the model expects
-df3 = df3.reshape((1,winSize,numFeatures))
-x = nnHM.predict(df3)
+lastTrainBatch = lastTrainBatch.reshape((1,winSize,numFeatures))
+x = nnHM.predict(lastTrainBatch)
 
-## Función normalizadora
-# Su unico proposito es normalizar los valores de hora, dia y mes para que puedan ser consumidos por el modelo
 def norm(value,index):
+    #value = (value - modelMean[index]) / modelStd[index]
     value = (value - train_mean[index]) / train_std[index]
     return value
 
@@ -174,6 +206,9 @@ predTest = predTest*train_std[varToPred].to_numpy()+train_mean[varToPred].to_num
 
 df = pandas.read_csv("../dataPreprocessed.csv")
 df = createTimeFeatures(df)
+dates_df = df.pop('utc')
+dates_df = df.pop('minute')
+dates_df = df.pop('year')
 test_df = df[lendf:len(df)]
 test_labels = df[['Ts_Valor','HR_Valor','QFE_Valor']][lendf:len(df)]
 test_labels = test_labels.reset_index(drop=True)
@@ -202,6 +237,4 @@ plt.show()
 a = stackPreds - test_labels[:72]
 a.mean()
 
-# HR_Valor     5.459077
-# QFE_Valor   -1.985800
-# Ts_Valor     0.226055
+
