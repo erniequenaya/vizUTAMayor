@@ -140,8 +140,14 @@ stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
 
 try: 
     stackPreds.to_sql('predictions',mydb,if_exists='append',index=False)
-    query = "ALTER TABLE predictions ADD id INT PRIMARY KEY AUTO_INCREMENT;"
-    mydb.execute(query)
+    query = "SHOW COLUMNS FROM `weather` LIKE 'id';"
+    a = mydb.execute(query)
+    if a.fetchall(): 
+        print("Columna id existente")
+    else: 
+        print("Añadiendo columna id")
+        query = "ALTER TABLE arimaPredictions ADD id INT PRIMARY KEY AUTO_INCREMENT;"
+        mydb.execute(query)
 except:
     print("error en conexion a db")
 
