@@ -47,9 +47,7 @@ df2 = df.groupby(pandas.Grouper(key="utc",freq='H')).mean()
 # lastHour.month = now.month
 # df2 = df2.append(lastHour)
 # Abandonado: Se decide iniciar las predicciones desde el momento del ultimo registro
-now = df2[-1:]
-now = now.reset_index()
-now = now['utc']
+now = pandas.to_datetime(df2[-1:]['utc'])
 
 # Rellenar gaps de hora si es que existen una serie de meotodos utilizables
 # solo por ahora, rellenamos los periodos de las ultimas 24 horas faltantes mediante interpolado lineal
@@ -72,11 +70,14 @@ dates_df = df.pop('utc')
 train_mean = df.mean()
 train_std = df.std()
 df = 0
+train_mean.index = ['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month']
+train_std.index = ['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month']
 
 # you can straight substract a list from dataframe without giving key values!
 df3 = df2[['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month']]
 # se ocuparan unicamente las ultimas 24 horas para la generación de pronosticos
 df3 = df3[-24:]
+df3 = df3.reset_index(drop=True)
 df3 = (df3 - train_mean) / train_std 
 df3 = df3.to_numpy()
 # reshape a valores actuales
@@ -90,7 +91,7 @@ df3 = np.reshape(df3,(-1,winSize,numFeatures))
 lstmModel = tf.keras.models.load_model('../../models/lstm/')
 
 stackPreds = pandas.DataFrame()
-deltaStack = list()
+deltaStack = pandas.DataFrame()
 lastTrainBatch = np.array(df3)
 lastTrainBatch = lastTrainBatch.reshape((1,winSize,numFeatures))
 # preparando variables para entrar al loop autoregresivo
@@ -103,11 +104,11 @@ def norm(value,index):
 
 for i in range(0,72):
     delta = now + datetime.timedelta(0,i*3600)
-    deltaStack.append(delta)
+    deltaStack = deltaStack.append(pandas.DataFrame(delta))
     #temp = np.array([x,y,z,delta.hour,delta.day,delta.month],dtype="float32")
     # temp = np.array([x,y,z,norm(delta.hour,3),norm(delta.day,4),norm(delta.month,5)],dtype="float32")
-    temp = np.array([x[0,0],x[0,1],x[0,2],norm(delta.hour,3),norm(delta.day,4),norm(delta.month,5)],dtype="float32")
-    print(delta.hour,delta.day,delta.month)
+    temp = np.array([x[0,0],x[0,1],x[0,2],norm(delta.dt.hour,3),norm(delta.dt.day,4),norm(delta.dt.month,5)],dtype="float32")
+    print(delta.dt.hour,delta.dt.day,delta.dt.month)
     stackPreds = stackPreds.append(pandas.DataFrame(temp).transpose())
     # df3 = np.vstack((df3[0],temp))
     # df4 = np.vstack((df4,temp))
@@ -118,6 +119,7 @@ for i in range(0,72):
     x = lstmModel.predict(df3)
 
 stackPreds = stackPreds.reset_index(drop=True)
+deltaStack = deltaStack.reset_index(drop=True)
 stackPreds.columns = ['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month']
 
 #stackPreds = stackPreds.reset_index()
@@ -132,14 +134,11 @@ stackPreds =stackPreds*train_std+train_mean
 stackPreds.AMBIENT_TEMPERATURE = stackPreds.AMBIENT_TEMPERATURE.round(3)
 stackPreds.HUMIDITY = stackPreds.HUMIDITY.round(3)
 stackPreds.AIR_PRESSURE = stackPreds.AIR_PRESSURE.round(3)
-stackPreds.hour = stackPreds.hour.round(0).astype(int)
-stackPreds.day = stackPreds.day.round(0).astype(int)
-stackPreds.month = stackPreds.month.round(0).astype(int)
-now = datetime.datetime.now()
-stackPreds['year'] = now.year
-stackPreds.year = stackPreds.year.astype(int)
+stackPreds['utc'] = deltaStack
+stackPreds.pop('hour')
+stackPreds.pop('day')
+stackPreds.pop('month')
 
-stackPreds['utc'] =stackPreds.year.astype(str)+'-'+stackPreds.month.astype(str)+'-'+stackPreds.day.astype(str)+' '+stackPreds.hour.astype(str)+':00:00'
 stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
 
 try: 

@@ -48,14 +48,12 @@ df2 = df.groupby(pandas.Grouper(key="utc",freq='H')).mean()
 # lastHour.month = now.month
 # df2 = df2.append(lastHour)
 # Abandonado: Se decide iniciar las predicciones desde el momento del ultimo registro
-now = df2[-1:]
-now = now.reset_index()
-now = now['utc']
+df2 = df2.reset_index()
+now = pandas.to_datetime(df2[-1:]['utc'])
 
 # El modelo random forest al no ser entrenado con valores normalizados no necesita que los nuevos valores a evaluar tengan este tratamiento
 # Si el orden de los datos debe ser el mismo
 # Temperatura - Humedad - Presion - hora - dia - mes - año
-df2 = df2.reset_index()
 df2 = createTimeFeatures(df2)
 df2 = df2[['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month','year']]
 
@@ -63,13 +61,15 @@ df2 = df2[['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month',
 # Caracteristicas: Input: 7 variables, Output: 3 variables, Predicciones: Pasos de 1 hora
 rfMultivar=joblib.load('../../models/rf')
 
+deltaStack = pandas.DataFrame()
+stackPreds = pandas.DataFrame()
 x = rfMultivar.predict(df2[-1:])
 
-stackPreds = pandas.DataFrame()
 #stackPreds = pandas.DataFrame(columns=row.keys())
 # para predecir mas horas basta con cambiar 72 a un valor mas alto
 for i in range(0,72):
     delta = now + datetime.timedelta(0,i*3600)
+    deltaStack = deltaStack.append(pandas.DataFrame(delta))
     #temp = np.array([x,y,z,delta.hour,delta.day,delta.month],dtype="float32")
     temp = np.array([x[0,0],x[0,1],x[0,2],delta.dt.hour,delta.dt.day,delta.dt.month,delta.dt.year],dtype="float32")
     stackPreds = stackPreds.append(pandas.DataFrame(temp).transpose())
@@ -78,6 +78,7 @@ for i in range(0,72):
     x = rfMultivar.predict(temp_RE)
 
 stackPreds = stackPreds.reset_index(drop=True)
+deltaStack= deltaStack.reset_index(drop=True)
 #stackPreds.plot(subplots=True)
 #plt.show()
 
@@ -87,12 +88,12 @@ stackPreds.columns = ['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','da
 stackPreds.AMBIENT_TEMPERATURE = stackPreds.AMBIENT_TEMPERATURE.round(3)
 stackPreds.HUMIDITY = stackPreds.HUMIDITY.round(3)
 stackPreds.AIR_PRESSURE = stackPreds.AIR_PRESSURE.round(3)
-stackPreds.hour = stackPreds.hour.round(0).astype(int)
-stackPreds.day = stackPreds.day.round(0).astype(int)
-stackPreds.month = stackPreds.month.round(0).astype(int)
-stackPreds.year = stackPreds.year.round(0).astype(int)
+stackPreds['utc'] = deltaStack
+stackPreds.pop('hour')
+stackPreds.pop('day')
+stackPreds.pop('month')
+stackPreds.pop('year')
 
-stackPreds['utc'] =stackPreds.year.astype(str)+'-'+stackPreds.month.astype(str)+'-'+stackPreds.day.astype(str)+' '+stackPreds.hour.astype(str)+':00:00'
 stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
 
 try:

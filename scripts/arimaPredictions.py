@@ -83,22 +83,12 @@ stackPreds['AIR_PRESSURE'] = model_fit.forecast(future)
 # de forma manual, y luego dropear la fila con el tipo de dato 'date'
 stackPreds = stackPreds.reset_index()
 stackPreds.columns = ['utc','AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE']
-stackPreds['hour'] = stackPreds.utc.dt.hour
-stackPreds['day'] = stackPreds.utc.dt.day
-stackPreds['month'] = stackPreds.utc.dt.month
-stackPreds['year'] = stackPreds.utc.dt.year
-stackPreds.pop('utc')
 
 stackPreds.AMBIENT_TEMPERATURE = stackPreds.AMBIENT_TEMPERATURE.round(3)
 stackPreds.HUMIDITY = stackPreds.HUMIDITY.round(3)
 stackPreds.AIR_PRESSURE = stackPreds.AIR_PRESSURE.round(3)
-stackPreds.hour = stackPreds.hour.round(0).astype(int)
-stackPreds.day = stackPreds.day.round(0).astype(int)
-stackPreds.month = stackPreds.month.round(0).astype(int)
-stackPreds.year = stackPreds.year.round(0).astype(int)
 
-stackPreds['utc'] =stackPreds.year.astype(str)+'-'+stackPreds.month.astype(str)+'-'+stackPreds.day.astype(str)+' '+stackPreds.hour.astype(str)+':00:00'
-stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
+#stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
 
 try:
     stackPreds.to_sql('arimaPredictions',mydb,if_exists='append',index=False)
