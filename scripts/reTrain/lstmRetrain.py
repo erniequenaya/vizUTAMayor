@@ -119,86 +119,86 @@ nnHM.save("../../../models/lstm")
 # El siguiente codigo se muestra solo con proposito de debugging, por lo tanto no se ha de descomentar cuando este script sea
 # implementado en el servidor
 
-# Se obtiene los ultimos 24 registros del set de entrenamiento, se formatean como 1 ventana y se predice en base a esta ventana
-# Este bloque de codigo contiene las bases de la implementacion de prediccion multipaso o autoregresiva en el script *../lstmPredictions.py*
-lastTrainBatch = train_df[-24:]
-lastTrainBatch = np.array(lastTrainBatch)
-# now reshape this lastTrainBatch to meet what input_shape the model expects
-lastTrainBatch = lastTrainBatch.reshape((1,winSize,numFeatures))
-lstmPred = nnHM.predict(lastTrainBatch,verbose=1)
-lstmPred
-
-# Recuerda que 1 prediccion requiere 24 horas de datos, por lo tanto, el 'now' para el modelo corresponde a la hora siguiente de ese tramo de
-# 24 horas de datos
-# when 0.995 split
-# now = pandas.to_datetime('2021-07-26 11:00:00')
-# when 0.9 split
-now = pandas.to_datetime('2021-03-23 06:00:00')
-
-stackPreds = pandas.DataFrame()
-# El nombre df3 es mas corto, esta es la unica razon por la que se usa desde ahora en reemplazo de lastTrainBatch
-df3 = train_df[-24:]
-df3 = np.array(df3)
-# now reshape this lastTrainBatch to meet what input_shape the model expects
-df3 = df3.reshape((1,winSize,numFeatures))
-x = nnHM.predict(df3)
-
-## Función normalizadora
-# Su unico proposito es normalizar los valores de hora, dia y mes para que puedan ser consumidos por el modelo
-def norm(value,index):
-    value = (value - train_mean[index]) / train_std[index]
-    return value
-
-for i in range(0,72):
-    delta = now + datetime.timedelta(0,i*3600)
-    #temp = np.array([x,y,z,delta.hour,delta.day,delta.month],dtype="float32")
-    # temp = np.array([x,y,z,norm(delta.hour,3),norm(delta.day,4),norm(delta.month,5)],dtype="float32")
-    temp = np.array([x[0,0],x[0,1],x[0,2],norm(delta.hour,3),norm(delta.day,4),norm(delta.month,5)],dtype="float32")
-    stackPreds = stackPreds.append(pandas.DataFrame(temp).transpose())
-    # df3 = np.vstack((df3[0],temp))
-    # df4 = np.vstack((df4,temp))
-    cde = np.reshape(df3,(24,6))
-    df3 = np.vstack((cde,temp))
-    df3 = np.delete(df3, (0), axis=0)
-    df3 = np.reshape(df3,(-1,24,6))
-    x = nnHM.predict(df3)
-
-stackPreds = stackPreds.reset_index(drop=True)
-stackPreds.columns = ['Ts_Valor','HR_Valor','QFE_Valor','hour','day','month']
-stackPreds = stackPreds*train_std+train_mean
-stackPreds
-
-predTest = nnHM.predict(test_gen,verbose=1)
-varToPred = ['Ts_Valor','HR_Valor','QFE_Valor']
-predTest = predTest*train_std[varToPred].to_numpy()+train_mean[varToPred].to_numpy()
-
-df = pandas.read_csv("../dataPreprocessed.csv")
-df = createTimeFeatures(df)
-test_df = df[lendf:len(df)]
-test_labels = df[['Ts_Valor','HR_Valor','QFE_Valor']][lendf:len(df)]
-test_labels = test_labels.reset_index(drop=True)
-
-plt.plot(test_labels['Ts_Valor'], label='testLabels')
-plt.plot(predTest[0:,0],label='predTestDF')
-plt.plot(stackPreds['Ts_Valor'],label='predAutonoma')
-plt.legend()
-plt.grid()
-plt.show()
-
-plt.plot(test_labels['HR_Valor'], label='testLabels')
-plt.plot(predTest[0:,1],label='predTestDF')
-plt.plot(stackPreds['HR_Valor'],label='predAutonoma')
-plt.legend()
-plt.grid()
-plt.show()
-
-plt.plot(test_labels['QFE_Valor'], label='testLabels')
-plt.plot(predTest[0:,2],label='predTestDF')
-plt.plot(stackPreds['QFE_Valor'],label='predAutonoma')
-plt.legend()
-plt.grid()
-plt.show()
-
+# # Se obtiene los ultimos 24 registros del set de entrenamiento, se formatean como 1 ventana y se predice en base a esta ventana
+# # Este bloque de codigo contiene las bases de la implementacion de prediccion multipaso o autoregresiva en el script *../lstmPredictions.py*
+# lastTrainBatch = train_df[-24:]
+# lastTrainBatch = np.array(lastTrainBatch)
+# # now reshape this lastTrainBatch to meet what input_shape the model expects
+# lastTrainBatch = lastTrainBatch.reshape((1,winSize,numFeatures))
+# lstmPred = nnHM.predict(lastTrainBatch,verbose=1)
+# lstmPred
+# 
+# # Recuerda que 1 prediccion requiere 24 horas de datos, por lo tanto, el 'now' para el modelo corresponde a la hora siguiente de ese tramo de
+# # 24 horas de datos
+# # when 0.995 split
+# # now = pandas.to_datetime('2021-07-26 11:00:00')
+# # when 0.9 split
+# now = pandas.to_datetime('2021-03-23 06:00:00')
+# 
+# stackPreds = pandas.DataFrame()
+# # El nombre df3 es mas corto, esta es la unica razon por la que se usa desde ahora en reemplazo de lastTrainBatch
+# df3 = train_df[-24:]
+# df3 = np.array(df3)
+# # now reshape this lastTrainBatch to meet what input_shape the model expects
+# df3 = df3.reshape((1,winSize,numFeatures))
+# x = nnHM.predict(df3)
+# 
+# ## Función normalizadora
+# # Su unico proposito es normalizar los valores de hora, dia y mes para que puedan ser consumidos por el modelo
+# def norm(value,index):
+#     value = (value - train_mean[index]) / train_std[index]
+#     return value
+# 
+# for i in range(0,72):
+#     delta = now + datetime.timedelta(0,i*3600)
+#     #temp = np.array([x,y,z,delta.hour,delta.day,delta.month],dtype="float32")
+#     # temp = np.array([x,y,z,norm(delta.hour,3),norm(delta.day,4),norm(delta.month,5)],dtype="float32")
+#     temp = np.array([x[0,0],x[0,1],x[0,2],norm(delta.hour,3),norm(delta.day,4),norm(delta.month,5)],dtype="float32")
+#     stackPreds = stackPreds.append(pandas.DataFrame(temp).transpose())
+#     # df3 = np.vstack((df3[0],temp))
+#     # df4 = np.vstack((df4,temp))
+#     cde = np.reshape(df3,(24,6))
+#     df3 = np.vstack((cde,temp))
+#     df3 = np.delete(df3, (0), axis=0)
+#     df3 = np.reshape(df3,(-1,24,6))
+#     x = nnHM.predict(df3)
+# 
+# stackPreds = stackPreds.reset_index(drop=True)
+# stackPreds.columns = ['Ts_Valor','HR_Valor','QFE_Valor','hour','day','month']
+# stackPreds = stackPreds*train_std+train_mean
+# stackPreds
+# 
+# predTest = nnHM.predict(test_gen,verbose=1)
+# varToPred = ['Ts_Valor','HR_Valor','QFE_Valor']
+# predTest = predTest*train_std[varToPred].to_numpy()+train_mean[varToPred].to_numpy()
+# 
+# df = pandas.read_csv("../dataPreprocessed.csv")
+# df = createTimeFeatures(df)
+# test_df = df[lendf:len(df)]
+# test_labels = df[['Ts_Valor','HR_Valor','QFE_Valor']][lendf:len(df)]
+# test_labels = test_labels.reset_index(drop=True)
+#  
+# plt.plot(test_labels['Ts_Valor'], label='testLabels')
+# plt.plot(predTest[0:,0],label='predTestDF')
+# plt.plot(stackPreds['Ts_Valor'],label='predAutonoma')
+# plt.legend()
+# plt.grid()
+# plt.show()
+# 
+# plt.plot(test_labels['HR_Valor'], label='testLabels')
+# plt.plot(predTest[0:,1],label='predTestDF')
+# plt.plot(stackPreds['HR_Valor'],label='predAutonoma')
+# plt.legend()
+# plt.grid()
+# plt.show()
+# 
+# plt.plot(test_labels['QFE_Valor'], label='testLabels')
+# plt.plot(predTest[0:,2],label='predTestDF')
+# plt.plot(stackPreds['QFE_Valor'],label='predAutonoma')
+# plt.legend()
+# plt.grid()
+# plt.show()
+# 
 a = stackPreds - test_labels[:72]
 a.mean()
 
