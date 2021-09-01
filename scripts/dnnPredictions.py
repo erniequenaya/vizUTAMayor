@@ -42,10 +42,19 @@ stackPredictors = stackPredictors.reset_index(drop=True)
 # entrenamiento, por lo tanto, estas metricas se traspasan a los predictandos(?) actuales para respetar los valores
 # con los que fue entrenado el modelo
 
-modelMean = [18.833937942048827, 67.28831089816715, 1009.0120921743098, 11.500418282759146, 15.734086242299794, 6.521370446421781]
-modelStd = [3.0178459228432164, 7.216205483706377, 2.2937924094103446, 6.92221927192334, 8.801762436194657, 3.448822871574395]
+# Normalizando manualmente
+# el modelo fue entrenado con valores normalizados generados en base a metricas -promedio, desviacion estandar- del dataset de 
+# entrenamiento, por lo tanto, estas metricas han de calcularse también para respetar la normalizacion (promedios y dev_est)
+# con los que fue entrenado el modelo
 
-stackPredictors = (stackPredictors - modelMean[3:]) / modelStd[3:]
+df = pandas.read_csv("dataPreprocessed.csv")
+df = createTimeFeatures(df)
+dates_df = df.pop('year')
+dates_df = df.pop('utc')
+train_mean = df.mean()
+train_std = df.std()
+
+stackPredictors = (stackPredictors - train_mean[3:]) / train_std[3:]
 
 # Cargado de modelo
 # dnnMultivar = tf.keras.models.load_model('../../pyCNN/deepNN-multiV2')
@@ -56,7 +65,7 @@ stackPreds = pandas.DataFrame(stackPreds)
 # Construyendo tabla de predicciones final, conteniendo predictores y Predicciones
 stackPreds = pandas.concat([stackPreds,stackPredictors],axis=1)
 # De-normalizando valores
-stackPreds = stackPreds * modelStd + modelMean
+stackPreds = stackPreds * train_std + train_mean 
 # El año no se considero en el entrenamiento pues disminuia la varianza de las predicciones demasiado
 stackPreds['year'] = now.year
 stackPreds.columns = ['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month','year']
@@ -70,9 +79,9 @@ stackPreds.columns = ['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','da
 stackPreds.AMBIENT_TEMPERATURE = stackPreds.AMBIENT_TEMPERATURE.round(3)
 stackPreds.HUMIDITY = stackPreds.HUMIDITY.round(3)
 stackPreds.AIR_PRESSURE = stackPreds.AIR_PRESSURE.round(3)
-stackPreds.hour = stackPreds.hour.astype(int)
-stackPreds.day = stackPreds.day.astype(int)
-stackPreds.month = stackPreds.month.astype(int)
+stackPreds.hour = stackPreds.hour.round(0).astype(int)
+stackPreds.day = stackPreds.day.round(0).astype(int)
+stackPreds.month = stackPreds.month.round(0).astype(int)
 
 stackPreds['utc'] =stackPreds.year.astype(str)+'-'+stackPreds.month.astype(str)+'-'+stackPreds.day.astype(str)+' '+stackPreds.hour.astype(str)+':00:00'
 stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
