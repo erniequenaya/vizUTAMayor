@@ -39,6 +39,10 @@ df = df[['AMBIENT_TEMPERATURE','AIR_PRESSURE','HUMIDITY','utc']]
 # Agrupando parametros segun hora para obtener un dataset de 24 filas
 df2 = df.groupby(pandas.Grouper(key="utc",freq='H')).mean()
 
+# Rellenar gaps de hora si es que existen una serie de meotodos utilizables
+# solo por ahora, rellenamos los periodos de las ultimas 24 horas faltantes mediante interpolado lineal
+df2 = df2.interpolate(method='linear')
+
 # Obteniendo la hora actual para establecerla como inicio de las predicciones
 # now = datetime.datetime.now()
 # lastHour = df2[-1:].copy()
@@ -47,15 +51,11 @@ df2 = df.groupby(pandas.Grouper(key="utc",freq='H')).mean()
 # lastHour.month = now.month
 # df2 = df2.append(lastHour)
 # Abandonado: Se decide iniciar las predicciones desde el momento del ultimo registro
+df2 = df2.reset_index()
 now = pandas.to_datetime(df2[-1:]['utc'])
-
-# Rellenar gaps de hora si es que existen una serie de meotodos utilizables
-# solo por ahora, rellenamos los periodos de las ultimas 24 horas faltantes mediante interpolado lineal
-df2 = df2.interpolate(method='linear')
 
 # Generando variables de tiempo para alimentar los modelos
 # basta con que se genere 1 registro cada una hora para poder alimentar el modelo
-df2 = df2.reset_index()
 df2 = createTimeFeatures(df2)
 
 # Normalizando manualmente
