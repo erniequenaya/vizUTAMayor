@@ -199,8 +199,8 @@ nnHM.save("../../../models/lstm")
 # plt.grid()
 # plt.show()
 # 
-a = stackPreds - test_labels[:72]
-a.mean()
+#a = stackPreds - test_labels[:72]
+#a.mean()
 
 # HR_Valor     5.459077
 # QFE_Valor   -1.985800
