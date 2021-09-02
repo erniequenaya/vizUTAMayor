@@ -17,7 +17,7 @@ import pymysql
 
 # Cargando datos locales
 # A la fecha de escritura de este codigo, corresponden a registros de datos hasta el 31 de julio
-df = pandas.read_csv("./dataPreprocessed.csv",parse_dates=['utc'])
+df = pandas.read_csv("../dataPreprocessed.csv",parse_dates=['utc'])
 lastTrainDate = df['utc'][-1:]
 then = lastTrainDate.to_string(index=False)
 # Este script, junto a los de reentramiento de ejecutan a principio de cada mes
@@ -58,7 +58,7 @@ localInterpolated = localInterpolated.reset_index()
 
 df =  df.append(localInterpolated, ignore_index=True)
 # Guardado de data preprocesada a un csv consumible por cada script de reentramiento
-df.to_csv("./dataPreprocessed.csv",index=False)
+df.to_csv("../dataPreprocessed.csv",index=False)
 
 mydb.close()
 engine.dispose()
