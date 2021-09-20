@@ -28,7 +28,7 @@ print(now)
 
 # Se obtienen datos de la DB para actualizar el csv los datos preprocesados
 try:
-    credentials = np.genfromtxt("pass",dtype='str')
+    credentials = np.genfromtxt("../pass",dtype='str')
     engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
     mydb = engine.connect()
     # La inserción de fechas en la query siempre ha de hacerse como string, los datos tipo datetime pueden user el predeterminado metodo 'str()'

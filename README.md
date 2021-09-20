@@ -1,5 +1,40 @@
-# Presentacion
-Lo presentado el 25 de junio se encuentra en la carpeta oldViz
+# UTA Mayor
+El presente proyecto corresponde a codigo necesario para generar el motor de predicciones de variables climáticas para el proyecto UTA Mayor
+
+# Estructura del proyecto
+El proyecto se estructura de la siguiente forma:
+/
+├── oldVisualization(25-6)
+│   └── visualizacoinAntes-25-6.html
+├── scripts
+│   ├── dataPreprocessed.csv
+│   ├── pass
+│   ├── predict
+│   │   ├── \*\*\* Predictions.py
+│   ├── pres9-8
+│   ├── pres9-8.ipynb
+│   └── reTrain
+│       ├── dataPreprocessing.py
+│       ├── \*\*\* Retrain.py
+├── visualizacionDatosR
+│   ├── 200006_2021_ \*\*\* .csv
+│   ├── soloCodigo.R
+│   ├── visualization.html
+│   └── weather.csv
+└── visualization.Rmd
+
+Leyenda:
++ oldVisualization  : corresponde al archivo presentado en la primera visualización de datos del proyecto
++ visualizacionR    : corresponde a los archivos de visualización presentados post-implementacion de la variable serverDate en la base de datos
+  - *200006_2021_\*\*\*.csv*  : csv con datos DGAC a la fecha de presentacion
+  - soloCodigo.R              : archivo ejecutable con opcion para conexion a DB, para obtener visualizacion de datos locales en cualquier momento
+  - visualization.html        : archivo presentado un mes despues de la 1ra visualizacion
+  - weather.csv               : respaldo de datos locales
++ scripts           : carpeta con archivos ejecutables importantes para el funcionamiento del sistema de pronosticos UTA Mayor
+  - **pass**                  : archivo con credenciales para acceso a base de datos UTA Mayor, debe crearse si no existe
+  - predict                   : carpeta con scripst de predicciones
+    + **Predictions.py**        : ejecutables
+  - **dataPreprocessed.csv**  : archivo 
 
 # Rmd 
 El documento presentado el 25 de junio corresponde a un .html generado por un archivo R Markdown (.Rmd)

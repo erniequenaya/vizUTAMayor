@@ -30,7 +30,7 @@ def createTimeFeatures (dfToExpand):
 
 try:
     #credentials = np.genfromtxt("../viz/scripts/pass",dtype='str')
-    credentials = np.genfromtxt("pass",dtype='str')
+    credentials = np.genfromtxt("../pass",dtype='str')
     engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
     mydb = engine.connect()
     # para rescatar las ultimas 24 horas: 24 * 60 * 12

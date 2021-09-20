@@ -28,7 +28,7 @@ def createTimeFeatures (dfToExpand):
 
 # hour day month in that order
 try:
-    credentials = np.genfromtxt("pass",dtype='str')
+    credentials = np.genfromtxt("../pass",dtype='str')
     engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
     mydb = engine.connect()
     query = "SELECT * FROM WEATHER_MEASUREMENT ORDER BY ID DESC LIMIT 1;"
@@ -114,9 +114,9 @@ stackPreds['utc'] = pandas.to_datetime(stackPreds['utc'])
 
 try:
     #credentials = np.genfromtxt("../viz/scripts/pass",dtype='str')
-    credentials = np.genfromtxt("pass",dtype='str')
-    engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
-    mydb = engine.connect()
+    # credentials = np.genfromtxt("../pass",dtype='str')
+    # engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
+    # mydb = engine.connect()
     stackPreds.to_sql('dnnPredictions',mydb,if_exists='append',index=False)
     query = "SHOW COLUMNS FROM `weather` LIKE 'id';"
     a = mydb.execute(query)
