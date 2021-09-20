@@ -81,7 +81,7 @@ stackPredictors = (stackPredictors - train_mean[3:]) / train_std[3:]
 
 # Cargado de modelo
 # dnnMultivar = tf.keras.models.load_model('../../pyCNN/deepNN-multiV2')
-dnnMultivar = tf.keras.models.load_model('../../models/dnn/')
+dnnMultivar = tf.keras.models.load_model('../../../models/dnn/')
 # Realizando pronosticos
 stackPreds = dnnMultivar.predict(stackPredictors)
 stackPreds = pandas.DataFrame(stackPreds)

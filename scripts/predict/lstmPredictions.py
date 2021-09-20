@@ -88,7 +88,7 @@ df3 = np.reshape(df3,(-1,winSize,numFeatures))
 # df3 just became a 3 dimensional array jesus...
 
 # Cargado de modelo
-lstmModel = tf.keras.models.load_model('../../models/lstm/')
+lstmModel = tf.keras.models.load_model('../../../models/lstm/')
 
 stackPreds = pandas.DataFrame()
 deltaStack = pandas.DataFrame()

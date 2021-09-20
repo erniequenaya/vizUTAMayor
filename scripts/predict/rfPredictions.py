@@ -59,7 +59,7 @@ df2 = df2[['AMBIENT_TEMPERATURE','HUMIDITY','AIR_PRESSURE','hour','day','month',
 
 # Carga de modelo
 # Caracteristicas: Input: 7 variables, Output: 3 variables, Predicciones: Pasos de 1 hora
-rfMultivar=joblib.load('../../models/rf')
+rfMultivar=joblib.load('../../../models/rf')
 
 deltaStack = pandas.DataFrame()
 stackPreds = pandas.DataFrame()
@@ -112,4 +112,4 @@ except:
 
 mydb.close()
 engine.dispose()
-## script ready to be callbablew
+## script ready to be callbable
