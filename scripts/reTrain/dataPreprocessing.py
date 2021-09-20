@@ -46,7 +46,7 @@ localdf = localdf.groupby(pandas.Grouper(key="utc",freq='H')).mean()
 ### Interpolado
 # El rellenado de datos faltantes puede hacerse de una serie de maneras y tienen un alto impacto en la posterior construccion de modelos
 # Para mantener la simpleza se ocupa un interpolado lineal tradicional
-# hasta que pueda realizarse un web screpping de registros DGAC (csv) y un df.update para incrustar nuestros datos locales sobre estos
+# hasta que pueda realizarse un web scrapping de registros DGAC (csv) y un df.update para incrustar nuestros datos locales sobre estos
 localInterpolated = localdf.interpolate(method="linear")
 
 localInterpolated.AMBIENT_TEMPERATURE = localInterpolated.AMBIENT_TEMPERATURE.round(2)

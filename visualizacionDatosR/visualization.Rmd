@@ -229,9 +229,9 @@ Los gráficos de las observaciones se presentan para cada variable del siguiente
 3. Distribución de la variable a traves del día, separando por meses del año, con tal de detectas una tendencia
 
 ```{r echo=FALSE}
-temp <- read.csv("../data/2021/200006_2021_Temperatura_.csv",header = TRUE, sep = ";")
-hum <- read.csv("../data/2021/200006_2021_Humedad_.csv",header = TRUE, sep = ";")
-qfe <- read.csv("../data/2021/200006_2021_PresionQFE_.csv",header = TRUE, sep = ";")
+temp <- read.csv("200006_2021_Temperatura_.csv",header = TRUE, sep = ";")
+hum <- read.csv("200006_2021_Humedad_.csv",header = TRUE, sep = ";")
+qfe <- read.csv("200006_2021_PresionQFE_.csv",header = TRUE, sep = ";")
 
 temp$utc<-dmy_hms(temp$momento)
 hum$utc<-dmy_hms(hum$momento)

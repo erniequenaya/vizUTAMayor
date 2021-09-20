@@ -3,28 +3,30 @@ El presente proyecto corresponde a codigo necesario para generar el motor de pre
 
 # Estructura del proyecto
 El proyecto se estructura de la siguiente forma:
-/
+
+```bash
 ├── oldVisualization(25-6)
 │   └── visualizacoinAntes-25-6.html
 ├── scripts
 │   ├── dataPreprocessed.csv
 │   ├── pass
 │   ├── predict
-│   │   ├── \*\*\* Predictions.py
+│   │   └── \*\*\* Predictions.py
 │   ├── pres9-8
 │   ├── pres9-8.ipynb
 │   └── reTrain
 │       ├── dataPreprocessing.py
-│       ├── \*\*\* Retrain.py
-├── visualizacionDatosR
-│   ├── 200006_2021_ \*\*\* .csv
-│   ├── soloCodigo.R
-│   ├── visualization.html
-│   └── weather.csv
-└── visualization.Rmd
+│       └── \*\*\* Retrain.py
+└── visualizacionDatosR
+    ├── 200006_2021_ \*\*\* .csv
+    ├── soloCodigo.R
+    ├── visualization.html
+    ├── visualization.Rmd
+    └── weather.csv
+```
 
 Leyenda:
-+ oldVisualization  : corresponde al archivo presentado en la primera visualización de datos del proyecto
++ oldVisualization  : corresponde al archivo presentado en la primera visualización de datos del proyecto el 25 de junio
 + visualizacionR    : corresponde a los archivos de visualización presentados post-implementacion de la variable serverDate en la base de datos
   - *200006_2021_\*\*\*.csv*  : csv con datos DGAC a la fecha de presentacion
   - soloCodigo.R              : archivo ejecutable con opcion para conexion a DB, para obtener visualizacion de datos locales en cualquier momento
@@ -32,9 +34,14 @@ Leyenda:
   - weather.csv               : respaldo de datos locales
 + scripts           : carpeta con archivos ejecutables importantes para el funcionamiento del sistema de pronosticos UTA Mayor
   - **pass**                  : archivo con credenciales para acceso a base de datos UTA Mayor, debe crearse si no existe
-  - predict                   : carpeta con scripst de predicciones
-    + **Predictions.py**        : ejecutables
-  - **dataPreprocessed.csv**  : archivo 
+  - predict                   : 
+    + **Predictions.py**      : ejecutables que generan los pronosticos climaticos del proyecto, uno por modelo
+  - pred9-8.ipynb             : notebook que contiene la logica e investigacion para la creacion de los modelos, tambien es ejecutable
+  - **dataPreprocessed.csv**  : archivo con datos que alimenta los procesos de reentramiento, actualizado automaticamente 1 vez al mes
+  - reTrain                   : 
+    + **dataPreprocessing.py**: ejecutable que actualiza el *dataPreprocessed.csv* una vez al mes con datos locales nuevos
+    + **reTrain.py**          : ejecutables que generan (o reentrenan) los modelos predictivos para el proyecto, uno por algoritmo
+
 
 # Rmd 
 El documento presentado el 25 de junio corresponde a un .html generado por un archivo R Markdown (.Rmd)
