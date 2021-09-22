@@ -1,4 +1,4 @@
-#!/root/prediccionService/venv/bin/python
+#!/root/prediccionservice/venv/bin/python
 
 import os
 import datetime

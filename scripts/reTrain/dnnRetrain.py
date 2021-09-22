@@ -134,7 +134,7 @@ nnHM.save('../../../models/dnn')
 # La caracteristica de ser "variable-climatica-agnostica" le da la ventaja al modelo de generar predicciones para cualquier momento de tiempo
 # independiente de que tan en el futuro esté, y a un bajo costo computacional (puesto que la estacionalidad o comportamiento ciclico de las 
 # variables climaticas se mantiene inmutable una vez entrenado el modelo)
-# Por supuesto, esto trae consigo la desventaja de que el modelo no se puede beneficiar de la informacion de registros meteorologicos nuevos a lo
+# Por supuesto, esto trae consigo la desventaja de que el modelo no se puede beneficiar de la informacion de registros meteorologicos nuevos
 # pues simplemente no los puede consumir como input
 ## 
 ## x = nnHM.predict(test_df)

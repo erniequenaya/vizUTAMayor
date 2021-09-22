@@ -25,7 +25,8 @@ try:
     engine = sqlalchemy.create_engine("mysql+pymysql://"+credentials[0]+":"+credentials[1]+"@"+credentials[2]+"/"+credentials[3] )
     mydb = engine.connect()
     #stackPreds = pandas.read_sql(query,mydb)
-    query = "SELECT * FROM WEATHER_MEASUREMENT ORDER BY ID DESC LIMIT 17280;"
+    #query = "SELECT * FROM WEATHER_MEASUREMENT ORDER BY ID DESC LIMIT 17280;"
+    query = "SELECT * FROM WEATHER_MEASUREMENT ORDER BY ID DESC LIMIT 34000;"
     # el ultimo dia solo hubo 5442 registros q no alcanzan pa 24 horas
     df = pandas.read_sql(query,mydb)
 except:
@@ -63,7 +64,7 @@ df2 = createTimeFeatures(df2)
 # entrenamiento, por lo tanto, estas metricas han de calcularse también para respetar la normalizacion (promedios y dev_est)
 # con los que fue entrenado el modelo
 
-df = pandas.read_csv("dataPreprocessed.csv")
+df = pandas.read_csv("../dataPreprocessed.csv")
 df = createTimeFeatures(df)
 dates_df = df.pop('year')
 dates_df = df.pop('utc')
@@ -88,7 +89,7 @@ df3 = np.reshape(df3,(-1,winSize,numFeatures))
 # df3 just became a 3 dimensional array jesus...
 
 # Cargado de modelo
-lstmModel = tf.keras.models.load_model('../../../models/lstm/')
+lstmModel = tf.keras.models.load_model('../../../models/lstm')
 
 stackPreds = pandas.DataFrame()
 deltaStack = pandas.DataFrame()
