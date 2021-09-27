@@ -60,7 +60,7 @@ stackPreds = pandas.DataFrame()
 
 # Los modelos ARIMA -y SARIMAX- solo son univariables, por lo debemos parsear solo parte de la serie de tiempo para poder crear los modelos
 
-model = ARIMA(series['AMBIENT_TEMPERATURE'], order=(24,1,0))
+model = ARIMA(series['AMBIENT_TEMPERATURE'], order=(24,1,1))
 model_fit = model.fit()
 
 # Uno de las mejores caracteristicas de los modelos ARIMA (o al menos su implementacion en pyhon) es que puede hacer bulk de predicciones con tan solo un
@@ -72,10 +72,10 @@ model_fit = model.fit()
 future = 72
 
 stackPreds['AMBIENT_TEMPERATURE'] = model_fit.forecast(future)
-model = ARIMA(series['HUMIDITY'], order=(24,1,0))
+model = ARIMA(series['HUMIDITY'], order=(24,1,1))
 model_fit = model.fit()
 stackPreds['HUMIDITY'] = model_fit.forecast(future)
-model = ARIMA(series['AIR_PRESSURE'], order=(24,1,0))
+model = ARIMA(series['AIR_PRESSURE'], order=(24,1,1))
 model_fit = model.fit()
 stackPreds['AIR_PRESSURE'] = model_fit.forecast(future)
 
