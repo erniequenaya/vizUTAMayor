@@ -165,10 +165,10 @@ def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
     # Feed Forward Part
     x = layers.LayerNormalization(epsilon=1e-6)(res)
     #x = layers.Conv1D(filters=ff_dim, kernel_size=1, activation="relu")(x)
-    x = layers.Conv1D(filters=ff_dim, kernel_size=1, activation="leaky_relu")(x)
+    x = layers.Conv1D(filters=ff_dim, kernel_size=1, activation=tf.nn.leaky_relu)(x)
     x = layers.Dropout(dropout)(x)
     #x = layers.Conv1D(filters=inputs.shape[-1], kernel_size=1)(x)
-    x = layers.Conv1D(filters=inputs.shape[-1], kernel_size=1, activation="leaky_relu")(x)
+    x = layers.Conv1D(filters=inputs.shape[-1], kernel_size=1, activation=tf.nn.leaky_relu)(x)
     return x + res
 
 ## Construyendo resto del modelo 
@@ -193,7 +193,7 @@ def build_model(
         x = layers.Dense(dim, activation="relu")(x)
         x = layers.Dropout(mlp_dropout)(x)
     #outputs = layers.Dense(n_classes, activation="softmax")(x)
-    outputs = layers.Dense(winLabel*num_features,activation="leaky_relu")(x)
+    outputs = layers.Dense(winLabel*num_features,activation=tf.nn.leaky_relu)(x)
     return tf.keras.Model(inputs, outputs)
 
 
@@ -247,6 +247,7 @@ x = np.hstack((x,b))
 
 ## Como el modelo genera outputs del mismo tipo que su input, puede implementarse de forma semi-autoregresiva,
 ## pues en vez de iria hora->hora va dia->dia
+x
 
 #stackPreds = pandas.DataFrame(np.reshape(x,(winLabel,num_features)))
 stackPreds = pandas.DataFrame(np.reshape(x,(72,num_features)))
@@ -260,40 +261,39 @@ last = first+72
 test_sample = test_df[first:last]
 test_sample = test_sample.reset_index(drop=True)
 
-plt.plot(test_sample['Ts_Valor'], label='testLabels')
-plt.plot(stackPreds['Ts_Valor'],label='stackPreds')
-plt.legend()
-plt.grid()
-plt.show()
-
-plt.plot(test_sample['HR_Valor'], label='testLabels')
-plt.plot(stackPreds['HR_Valor'],label='stackPreds')
-plt.legend()
-plt.grid()
-plt.show()
-
-plt.plot(test_sample['QFE_Valor'], label='testLabels')
-plt.plot(stackPreds['QFE_Valor'],label='stackPreds')
-plt.legend()
-plt.grid()
-plt.show()
-
-#plt.plot(test_df['dsin'][first:last], label='testLabels')
-#plt.plot(stackPreds['dsin'],label='stackPreds')
+#plt.plot(test_sample['Ts_Valor'], label='testLabels')
+#plt.plot(stackPreds['Ts_Valor'],label='stackPreds')
 #plt.legend()
 #plt.grid()
 #plt.show()
-
-plt.plot(test_df['ysin'], label='testLabels')
-plt.plot(stackPreds['ysin'],label='stackPreds')
-plt.legend()
-plt.grid()
-plt.show()
+#
+#plt.plot(test_sample['HR_Valor'], label='testLabels')
+#plt.plot(stackPreds['HR_Valor'],label='stackPreds')
+#plt.legend()
+#plt.grid()
+#plt.show()
+#
+#plt.plot(test_sample['QFE_Valor'], label='testLabels')
+#plt.plot(stackPreds['QFE_Valor'],label='stackPreds')
+#plt.legend()
+#plt.grid()
+#plt.show()
+#
+##plt.plot(test_df['dsin'][first:last], label='testLabels')
+##plt.plot(stackPreds['dsin'],label='stackPreds')
+##plt.legend()
+##plt.grid()
+##plt.show()
+#
+#plt.plot(test_df['ysin'], label='testLabels')
+#plt.plot(stackPreds['ysin'],label='stackPreds')
+#plt.legend()
+#plt.grid()
+#plt.show()
 
 from sklearn.metrics import mean_absolute_error
 a = mean_absolute_error(stackPreds[['Ts_Valor','HR_Valor','QFE_Valor']],test_df[['Ts_Valor','HR_Valor','QFE_Valor']][first:last],multioutput='raw_values')
 a
 
 trans.save("../../../models/transformer")
-trans2
 # array([0.51061708, 0.61037691, 0.64611513]) 24->24 to 72 dsin+ysin leakyrelu
