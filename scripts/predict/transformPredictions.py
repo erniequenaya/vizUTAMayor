@@ -104,7 +104,7 @@ predictions.HUMIDITY = predictions.HUMIDITY.round(3)
 predictions.AIR_PRESSURE = predictions.AIR_PRESSURE.round(3)
 
 try:
-    stackPreds.to_sql('transformerPredictions',mydb,if_exists='append',index=False)
+    predictions.to_sql('transformerPredictions',mydb,if_exists='append',index=False)
     query = "SHOW COLUMNS FROM `weather` LIKE 'id';"
     a = mydb.execute(query)
     if a.fetchall(): 
